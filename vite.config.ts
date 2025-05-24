@@ -1,7 +1,10 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+// @ts-ignore
 import { resolve, dirname } from 'node:path'
+// @ts-ignore
 import { fileURLToPath } from 'node:url'
+
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)

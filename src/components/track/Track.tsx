@@ -14,7 +14,7 @@ interface TrackProps {
   pixelsPerSecond: number
   trackHeight: number
   projectDuration: number
-  selectedClipId?: string
+  selectedClipId?: string | null
   onTrackUpdate: (trackId: string, updates: Partial<AudioTrackType>) => void
   onClipSelect: (clipId: string) => void
   onClipMove: (clipId: string, newStartTime: number) => void
@@ -132,10 +132,10 @@ function Track({
       {/* Track content area */}
       <div className="track-content" style={{ width: trackWidth }}>
         {/* Track background/lane */}
-        <div 
+        <div
           className="track-lane"
-          style={{ 
-            width: trackWidth, 
+          style={{
+            width: trackWidth,
             height: trackHeight - 40, // Subtract header height
             borderLeft: `3px solid ${track.color}`
           }}
