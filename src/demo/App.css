@@ -1,0 +1,47 @@
+.app {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.app-header {
+  padding: 16px 24px;
+  background-color: var(--bg-tertiary);
+  border-bottom: 1px solid var(--border-primary);
+  text-align: center;
+}
+
+.app-header h1 {
+  margin: 0 0 8px 0;
+  color: var(--accent-primary);
+  font-size: var(--text-2xl);
+  font-weight: var(--font-bold);
+}
+
+.app-header p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-base);
+}
+
+.app-main {
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .app-header {
+    padding: 12px 16px;
+  }
+  
+  .app-header h1 {
+    font-size: var(--text-xl);
+  }
+  
+  .app-header p {
+    font-size: var(--text-sm);
+  }
+}

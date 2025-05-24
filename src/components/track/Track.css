@@ -1,0 +1,207 @@
+.audio-track {
+  display: flex;
+  flex-direction: column;
+  background-color: #1a1a1a;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  position: relative;
+}
+
+/* Track header */
+.track-header {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  background-color: #2a2a2a;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  min-height: 40px;
+  gap: 12px;
+}
+
+.track-name-input {
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 4px 6px;
+  border-radius: 3px;
+  min-width: 80px;
+  max-width: 120px;
+}
+
+.track-name-input:focus {
+  outline: none;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Track controls */
+.track-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.track-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 4px;
+  color: #ffffff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.track-button:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.track-button.active {
+  background-color: #ff5500;
+  color: white;
+}
+
+.mute-button.active {
+  background-color: #ff006e;
+}
+
+.solo-button.active {
+  background-color: #ffbe0b;
+  color: #121212;
+}
+
+/* Sliders */
+.slider-container {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 80px;
+}
+
+.slider-label {
+  font-size: 10px;
+  color: #aaaaaa;
+  min-width: 20px;
+}
+
+.volume-slider,
+.pan-slider {
+  width: 50px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.volume-slider::-webkit-slider-thumb,
+.pan-slider::-webkit-slider-thumb {
+  width: 12px;
+  height: 12px;
+  background: #3a86ff;
+  border-radius: 50%;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  border: none;
+}
+
+.volume-slider::-moz-range-thumb,
+.pan-slider::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  background: #3a86ff;
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+}
+
+.volume-slider::-webkit-slider-thumb:hover,
+.pan-slider::-webkit-slider-thumb:hover {
+  background: #619bff;
+}
+
+.slider-value {
+  font-size: 9px;
+  color: #aaaaaa;
+  min-width: 25px;
+  text-align: center;
+}
+
+/* Track content */
+.track-content {
+  position: relative;
+  flex: 1;
+  overflow: visible;
+}
+
+.track-lane {
+  background-color: rgba(255, 255, 255, 0.02);
+  position: relative;
+  border-radius: 0 4px 4px 0;
+}
+
+.track-lane::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent,
+    transparent 99px,
+    rgba(255, 255, 255, 0.05) 100px
+  );
+  pointer-events: none;
+}
+
+/* Responsive design */
+@media (max-width: 1024px) {
+  .track-header {
+    padding: 6px 8px;
+    gap: 8px;
+  }
+  
+  .slider-container {
+    min-width: 60px;
+  }
+  
+  .volume-slider,
+  .pan-slider {
+    width: 40px;
+  }
+  
+  .track-name-input {
+    max-width: 100px;
+  }
+}
+
+@media (max-width: 768px) {
+  .track-header {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 8px;
+    gap: 6px;
+  }
+  
+  .track-controls {
+    justify-content: space-between;
+    margin-left: 0;
+  }
+  
+  .slider-container {
+    min-width: 50px;
+  }
+  
+  .slider-value {
+    display: none;
+  }
+}
