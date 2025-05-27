@@ -5,16 +5,27 @@ import { resolve, dirname } from 'node:path'
 // @ts-ignore
 import { fileURLToPath } from 'node:url'
 
-
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
-
+const isDev = true // import.meta.env.MODE === 'development'
+const isAppBuild = true
 
 export default defineConfig({
   plugins: [react()],
 
-  // Build configuration
-  build: {
+  // Conditional build configuration
+  build: isAppBuild ? {
+    // App build configuration (for Vercel/Netlify deployment)
+    outDir: 'dist',
+    rollupOptions: {
+      input: {
+        main: resolve(__dirname, 'index.html')
+      }
+    },
+    sourcemap: true,
+    minify: 'esbuild'
+  } : {
+    // Library build configuration
     lib: {
       entry: resolve(__dirname, 'src/index.ts'),
       name: 'AudioStreams',
@@ -73,4 +84,9 @@ export default defineConfig({
   optimizeDeps: {
     include: ['react', 'react-dom', 'lucide-react']
   },
+
+  // Define environment variables
+  define: {
+    __DEV__: JSON.stringify(isDev)
+  }
 })
