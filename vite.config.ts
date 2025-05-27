@@ -1,64 +1,64 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-// @ts-ignore
 import { resolve, dirname } from 'node:path'
-// @ts-ignore
 import { fileURLToPath } from 'node:url'
 
+
 const __filename = fileURLToPath(import.meta.url)
-const __dirname = dirname(__filename)
-const isDev = true // import.meta.env.MODE === 'development'
+const __dirname  = dirname(__filename)
+const isDev      = true // import.meta.env.MODE === 'development'
 const isAppBuild = true
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [ react() ],
 
   // Conditional build configuration
-  build: isAppBuild ? {
-    // App build configuration (for Vercel/Netlify deployment)
-    outDir: 'dist',
-    rollupOptions: {
-      input: {
-        main: resolve(__dirname, 'index.html')
-      }
-    },
-    sourcemap: true,
-    minify: 'esbuild'
-  } : {
-    // Library build configuration
-    lib: {
-      entry: resolve(__dirname, 'src/index.ts'),
-      name: 'AudioStreams',
-      fileName: 'audio-streams',
-      formats: ['es', 'cjs']
-    },
-    rollupOptions: {
-      external: ['react', 'react-dom'],
-      output: {
-        globals: {
-          react: 'React',
-          'react-dom': 'ReactDOM'
+  build: isAppBuild
+    ? {
+      // App build configuration (for Vercel/Netlify deployment)
+      outDir:        'dist',
+      rollupOptions: {
+        input: {
+          main: resolve(__dirname, 'index.html')
         }
-      }
+      },
+      sourcemap: true,
+      minify:    'esbuild'
+    }
+    : {
+      lib: {
+        entry:    resolve(__dirname, 'src/index.ts'),
+        name:     'AudioStreams',
+        fileName: 'audio-streams',
+        formats:  [ 'es', 'cjs' ]
+      },
+      rollupOptions: {
+        external: [ 'react', 'react-dom' ],
+        output:   {
+          globals: {
+            'react':     'React',
+            'react-dom': 'ReactDOM'
+          }
+        }
+      },
+      sourcemap: true,
+      minify:    'esbuild'
     },
-    sourcemap: true,
-    minify: 'esbuild'
-  },
 
   // Development server
   server: {
-    port: 3000,
-    host: true,
+    port:    3000,
+    host:    true,
     headers: {
       // Required for Web Workers and SharedArrayBuffer
       'Cross-Origin-Embedder-Policy': 'require-corp',
-      'Cross-Origin-Opener-Policy': 'same-origin'
+      'Cross-Origin-Opener-Policy':   'same-origin'
     }
   },
 
   // Worker configuration
   worker: {
-    format: 'es',
+    format:        'es',
     rollupOptions: {
       output: {
         entryFileNames: 'workers/[name].js'
@@ -82,7 +82,7 @@ export default defineConfig({
 
   // Optimization
   optimizeDeps: {
-    include: ['react', 'react-dom', 'lucide-react']
+    include: [ 'react', 'react-dom', 'lucide-react' ]
   },
 
   // Define environment variables

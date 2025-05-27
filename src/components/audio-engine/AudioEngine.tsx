@@ -5,25 +5,24 @@
 
 import { useRef, useEffect, useState, useCallback, useImperativeHandle, forwardRef } from 'react'
 import { AudioTrack, AudioClip, AudioEngineState } from '../../types/audio'
-import { 
-  createGainNode, 
-  createStereoPanner, 
+import {
+  createGainNode,
+  createStereoPanner,
   createBufferSource,
-  validateAudioContext,
-  resumeAudioContext
 } from '../../utils/audioUtils'
 
+
 interface AudioEngineProps {
-  tracks: AudioTrack[]
-  isPlaying: boolean
-  currentTime: number
-  isLooping: boolean
-  loopStart: number
-  loopEnd: number
-  volume: number
-  bpm: number
-  onTimeUpdate: (time: number) => void
-  onPlaybackEnd: () => void
+  tracks:         AudioTrack[]
+  isPlaying:      boolean
+  currentTime:    number
+  isLooping:      boolean
+  loopStart:      number
+  loopEnd:        number
+  volume:         number
+  bpm:            number
+  onTimeUpdate:   (time: number) => void
+  onPlaybackEnd:  () => void
   onStateChange?: (state: AudioEngineState) => void
 }
 
@@ -33,13 +32,13 @@ export interface AudioEngineRef {
 
 interface ClipNodes {
   source: AudioBufferSourceNode
-  gain: GainNode
+  gain:   GainNode
   panner: StereoPannerNode
 }
 
 interface TrackNodes {
-  gain: GainNode
-  panner: StereoPannerNode
+  gain:      GainNode
+  panner:    StereoPannerNode
   clipNodes: Map<string, ClipNodes>
 }
 
@@ -59,34 +58,35 @@ const AudioEngine = forwardRef<AudioEngineRef, AudioEngineProps>(({
   // Audio context and nodes
   const audioContextRef = useRef<AudioContext | null>(null)
   const mainGainNodeRef = useRef<GainNode | null>(null)
-  const trackNodesRef = useRef<Map<string, TrackNodes>>(new Map())
-  
+  const trackNodesRef   = useRef<Map<string, TrackNodes>>(new Map())
+
   // Playback state
-  const rafIdRef = useRef<number | null>(null)
+  const rafIdRef     = useRef<number | null>(null)
   const startTimeRef = useRef<number>(0)
-  const pausedAtRef = useRef<number>(currentTime)
-  
+  const pausedAtRef  = useRef<number>(currentTime)
+
   // Component state
-  const [isInitialized, setIsInitialized] = useState(false)
-  const [audioState, setAudioState] = useState<AudioEngineState>({
-    isPlaying: false,
-    currentTime: 0,
-    isLooping: false,
-    loopStart: 0,
-    loopEnd: 0,
-    bpm: 120,
-    volume: 0.8,
+  const [ isInitialized, setIsInitialized ] = useState(false)
+  const [ audioState, setAudioState ]       = useState<AudioEngineState>({
+    isPlaying:     false,
+    currentTime:   0,
+    isLooping:     false,
+    loopStart:     0,
+    loopEnd:       0,
+    bpm:           120,
+    volume:        0.8,
     isInitialized: false
   })
 
   // Initialize audio context (only on user gesture)
   const initializeAudioContext = useCallback(async () => {
-    if (audioContextRef.current) return
+    if (audioContextRef.current)
+      return
 
     try {
       // Create AudioContext - this will be suspended until user gesture
       audioContextRef.current = new AudioContext({
-        sampleRate: 48000,
+        sampleRate:  48000,
         latencyHint: 'interactive'
       })
 
@@ -96,63 +96,67 @@ const AudioEngine = forwardRef<AudioEngineRef, AudioEngineProps>(({
 
       setIsInitialized(true)
       setAudioState(prev => ({ ...prev, isInitialized: true }))
-      
+
       console.log('Audio context created:', {
         sampleRate: audioContextRef.current.sampleRate,
-        state: audioContextRef.current.state
+        state:      audioContextRef.current.state
       })
-
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Failed to initialize audio context:', error)
     }
-  }, [volume])
+  }, [ volume ])
 
   // Resume audio context on user gesture
   const resumeAudioContextOnUserGesture = useCallback(async () => {
     if (!audioContextRef.current) {
       console.warn('No audio context to resume, creating new one')
       await initializeAudioContext()
-      if (!audioContextRef.current) return false
+      if (!audioContextRef.current)
+        return false
     }
 
     try {
       console.log('Audio context state before resume:', audioContextRef.current.state)
-      
+
       // If context is closed, create a new one
       if (audioContextRef.current.state === 'closed') {
         console.log('AudioContext was closed, creating new one')
         audioContextRef.current = null
         await initializeAudioContext()
-        if (!audioContextRef.current) return false
+        if (!audioContextRef.current)
+          return false
       }
-      
+
       if (audioContextRef.current.state === 'suspended') {
         await audioContextRef.current.resume()
         console.log('Audio context resumed, new state:', audioContextRef.current.state)
       }
-      
+
       const isRunning = audioContextRef.current.state === 'running'
       console.log('Audio context is running:', isRunning)
       return isRunning
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Failed to resume audio context:', error)
       return false
     }
-  }, [initializeAudioContext])
+  }, [ initializeAudioContext ])
 
   // Setup audio nodes for all tracks
   const setupAudioNodes = useCallback(() => {
-    if (!audioContextRef.current || !mainGainNodeRef.current) return
+    if (!audioContextRef.current || !mainGainNodeRef.current)
+      return
 
     const audioContext = audioContextRef.current
-    const mainGain = mainGainNodeRef.current
+    const mainGain     = mainGainNodeRef.current
 
     // Clear existing nodes
     cleanupAudioNodes()
 
     // Create nodes for each track
     tracks.forEach(track => {
-      const trackGain = createGainNode(audioContext, track.muted ? 0 : track.volume)
+      const trackGain   = createGainNode(audioContext, track.muted ? 0 : track.volume)
       const trackPanner = createStereoPanner(audioContext, track.pan)
 
       trackGain.connect(trackPanner)
@@ -161,7 +165,7 @@ const AudioEngine = forwardRef<AudioEngineRef, AudioEngineProps>(({
       const clipNodes = new Map<string, ClipNodes>()
       trackNodesRef.current.set(track.id, { gain: trackGain, panner: trackPanner, clipNodes })
     })
-  }, [tracks])
+  }, [ tracks ])
 
   // Cleanup audio nodes
   const cleanupAudioNodes = useCallback(() => {
@@ -169,7 +173,8 @@ const AudioEngine = forwardRef<AudioEngineRef, AudioEngineProps>(({
       track.clipNodes.forEach(clip => {
         try {
           clip.source.stop()
-        } catch (e) {
+        }
+        catch (e) {
           // Ignore if already stopped
         }
         clip.source.disconnect()
@@ -185,20 +190,20 @@ const AudioEngine = forwardRef<AudioEngineRef, AudioEngineProps>(({
 
   // Schedule a clip for playback
   const scheduleClip = useCallback((clip: AudioClip, track: AudioTrack, trackNodes: TrackNodes) => {
-    if (!audioContextRef.current || !clip.audioBuffer) return
+    if (!audioContextRef.current || !clip.audioBuffer)
+      return
 
-    const audioContext = audioContextRef.current
-    const clipStartTime = clip.startTime
+    const audioContext      = audioContextRef.current
+    const clipStartTime     = clip.startTime
     const currentTimeOffset = pausedAtRef.current
 
     // Only schedule clips that should be playing
-    if (clipStartTime + clip.duration < currentTimeOffset) {
-      return // Clip is in the past
-    }
+    if (clipStartTime + clip.duration < currentTimeOffset)
+      return
 
     // Create nodes for this clip
     const source = createBufferSource(audioContext, clip.audioBuffer, Math.pow(2, clip.pitch / 12))
-    const gain = createGainNode(audioContext, clip.volume)
+    const gain   = createGainNode(audioContext, clip.volume)
     const panner = createStereoPanner(audioContext)
 
     // Connect nodes
@@ -207,7 +212,7 @@ const AudioEngine = forwardRef<AudioEngineRef, AudioEngineProps>(({
     panner.connect(trackNodes.gain)
 
     // Calculate timing
-    const startOffset = Math.max(0, currentTimeOffset - clipStartTime)
+    const startOffset       = Math.max(0, currentTimeOffset - clipStartTime)
     const scheduleStartTime = audioContext.currentTime + Math.max(0, clipStartTime - currentTimeOffset)
 
     // Schedule playback
@@ -224,7 +229,8 @@ const AudioEngine = forwardRef<AudioEngineRef, AudioEngineProps>(({
 
   // Start audio playback
   const startPlayback = useCallback(async () => {
-    if (!isInitialized) return
+    if (!isInitialized)
+      return
 
     // Ensure audio context is running (requires user gesture)
     const isContextRunning = await resumeAudioContextOnUserGesture()
@@ -247,7 +253,8 @@ const AudioEngine = forwardRef<AudioEngineRef, AudioEngineProps>(({
     // Schedule all clips
     tracks.forEach(track => {
       const trackNodes = trackNodesRef.current.get(track.id)
-      if (!trackNodes) return
+      if (!trackNodes)
+        return
 
       track.clips.forEach(clip => {
         scheduleClip(clip, track, trackNodes)
@@ -256,7 +263,8 @@ const AudioEngine = forwardRef<AudioEngineRef, AudioEngineProps>(({
 
     // Start time update loop
     const updateTime = () => {
-      if (!audioContextRef.current || !isPlaying) return
+      if (!audioContextRef.current || !isPlaying)
+        return
 
       const currentAudioTime = audioContextRef.current.currentTime - startTimeRef.current
       onTimeUpdate(Math.max(0, currentAudioTime))
@@ -271,20 +279,20 @@ const AudioEngine = forwardRef<AudioEngineRef, AudioEngineProps>(({
         setupAudioNodes()
         tracks.forEach(track => {
           const trackNodes = trackNodesRef.current.get(track.id)
-          if (!trackNodes) return
+          if (!trackNodes)
+            return
           track.clips.forEach(clip => {
             scheduleClip(clip, track, trackNodes)
           })
         })
       }
 
-      if (isPlaying) {
+      if (isPlaying)
         rafIdRef.current = requestAnimationFrame(updateTime)
-      }
     }
 
     rafIdRef.current = requestAnimationFrame(updateTime)
-  }, [isInitialized, isPlaying, tracks, isLooping, loopStart, loopEnd, onTimeUpdate, scheduleClip, setupAudioNodes, cleanupAudioNodes, resumeAudioContextOnUserGesture])
+  }, [ isInitialized, isPlaying, tracks, isLooping, loopStart, loopEnd, onTimeUpdate, scheduleClip, setupAudioNodes, cleanupAudioNodes, resumeAudioContextOnUserGesture ])
 
   // Stop audio playback
   const stopPlayback = useCallback(() => {
@@ -293,7 +301,8 @@ const AudioEngine = forwardRef<AudioEngineRef, AudioEngineProps>(({
       rafIdRef.current = null
     }
 
-    if (!audioContextRef.current) return
+    if (!audioContextRef.current)
+      return
 
     // Store current position
     pausedAtRef.current = audioContextRef.current.currentTime - startTimeRef.current
@@ -303,7 +312,8 @@ const AudioEngine = forwardRef<AudioEngineRef, AudioEngineProps>(({
       track.clipNodes.forEach(clip => {
         try {
           clip.source.stop()
-        } catch (e) {
+        }
+        catch (e) {
           // Ignore if already stopped
         }
       })
@@ -313,9 +323,10 @@ const AudioEngine = forwardRef<AudioEngineRef, AudioEngineProps>(({
 
   // Update volume
   useEffect(() => {
-    if (!mainGainNodeRef.current) return
+    if (!mainGainNodeRef.current)
+      return
     mainGainNodeRef.current.gain.value = volume
-  }, [volume])
+  }, [ volume ])
 
   // Update audio state
   useEffect(() => {
@@ -331,53 +342,51 @@ const AudioEngine = forwardRef<AudioEngineRef, AudioEngineProps>(({
     }
     setAudioState(newState)
     onStateChange?.(newState)
-  }, [isPlaying, currentTime, isLooping, loopStart, loopEnd, bpm, volume, isInitialized, onStateChange])
+  }, [ isPlaying, currentTime, isLooping, loopStart, loopEnd, bpm, volume, isInitialized, onStateChange ])
 
   // Initialize on mount
   useEffect(() => {
     initializeAudioContext()
 
     return () => {
-      if (rafIdRef.current) {
+      if (rafIdRef.current)
         cancelAnimationFrame(rafIdRef.current)
-      }
       cleanupAudioNodes()
       // Don't close AudioContext on unmount - it might be needed for resume
       // The context will be garbage collected when the page unloads
     }
-  }, [initializeAudioContext, cleanupAudioNodes])
+  }, [ initializeAudioContext, cleanupAudioNodes ])
 
   // Setup nodes when tracks change
   useEffect(() => {
-    if (!isInitialized) return
+    if (!isInitialized)
+      return
     setupAudioNodes()
-  }, [isInitialized, tracks, setupAudioNodes])
+  }, [ isInitialized, tracks, setupAudioNodes ])
 
   // Handle play/pause state changes
   useEffect(() => {
-    if (!isInitialized) return
+    if (!isInitialized)
+      return
 
-    if (isPlaying) {
-      // Add a small delay to ensure user gesture has been processed
+    if (isPlaying)
       setTimeout(() => {
         startPlayback()
       }, 50)
-    } else {
+    else
       stopPlayback()
-    }
-  }, [isInitialized, isPlaying, startPlayback, stopPlayback])
+  }, [ isInitialized, isPlaying, startPlayback, stopPlayback ])
 
   // Handle time changes when not playing
   useEffect(() => {
-    if (!isPlaying) {
+    if (!isPlaying)
       pausedAtRef.current = currentTime
-    }
-  }, [currentTime, isPlaying])
+  }, [ currentTime, isPlaying ])
 
   // Expose methods to parent component
   useImperativeHandle(ref, () => ({
     resumeAudioContext: resumeAudioContextOnUserGesture
-  }), [resumeAudioContextOnUserGesture])
+  }), [ resumeAudioContextOnUserGesture ])
 
   // This component handles logic only, no UI
   return null

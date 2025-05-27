@@ -9,7 +9,7 @@
   --bg-primary: #121212;
   --bg-secondary: #1a1a1a;
   --bg-tertiary: #2a2a2a;
-  
+
   /* Interactive Colors */
   --accent-primary: #ff5500;
   --accent-primary-hover: #ff7733;
@@ -18,29 +18,29 @@
   --accent-success: #38b000;
   --accent-warning: #ffbe0b;
   --accent-danger: #ff006e;
-  
+
   /* Text Colors */
   --text-primary: #ffffff;
   --text-secondary: #dddddd;
   --text-tertiary: #aaaaaa;
   --text-inverse: #121212;
-  
+
   /* Borders & Dividers */
   --border-primary: rgba(255, 255, 255, 0.1);
   --border-focus: var(--accent-primary);
   --border-hover: rgba(255, 255, 255, 0.2);
-  
+
   /* Audio-Specific Colors */
   --waveform-color: #3a86ff;
   --waveform-inactive: rgba(58, 134, 255, 0.3);
   --playhead-color: #ff5500;
   --timeline-ruler: #666666;
   --track-separator: var(--border-primary);
-  
+
   /* Typography */
   --font-primary: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-mono: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", monospace;
-  
+
   /* Font Sizes */
   --text-xs: 10px;
   --text-sm: 12px;
@@ -48,14 +48,14 @@
   --text-lg: 16px;
   --text-xl: 20px;
   --text-2xl: 24px;
-  
+
   /* Font Weights */
-  --font-light: 300;
-  --font-normal: 400;
-  --font-medium: 500;
-  --font-semibold: 600;
-  --font-bold: 700;
-  
+  --font-light: 100;
+  --font-normal: 300;
+  --font-medium: 400;
+  --font-semibold: 500;
+  --font-bold: 800;
+
   /* Spacing */
   --space-0: 0;
   --space-1: 4px;
@@ -68,44 +68,44 @@
   --space-10: 40px;
   --space-12: 48px;
   --space-16: 64px;
-  
+
   /* Audio Component Heights */
   --track-height: 64px;
   --timeline-height: 48px;
   --toolbar-height: 56px;
   --clip-min-width: 24px;
-  
+
   /* Interactive Areas */
   --touch-target: 44px;
   --slider-height: 20px;
   --button-height: 32px;
-  
+
   /* Shadows */
   --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
   --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07), 0 2px 4px rgba(0, 0, 0, 0.06);
   --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
   --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1), 0 8px 10px rgba(0, 0, 0, 0.04);
-  
+
   /* Border Radius */
   --radius-sm: 2px;
   --radius-md: 4px;
   --radius-lg: 8px;
-  
+
   /* Transitions */
   --duration-instant: 0ms;
   --duration-fast: 100ms;
   --duration-normal: 200ms;
   --duration-slow: 300ms;
   --duration-slower: 500ms;
-  
+
   /* Easing */
   --ease-linear: linear;
   --ease-in: cubic-bezier(0.4, 0, 1, 1);
   --ease-out: cubic-bezier(0, 0, 0.2, 1);
   --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
   --ease-spring: cubic-bezier(0.68, -0.55, 0.265, 1.55);
-  
+
   /* Common Transitions */
   --transition-base: all var(--duration-normal) var(--ease-out);
   --transition-colors: color var(--duration-fast) var(--ease-out),
@@ -366,13 +366,13 @@ input[type="range"]::-moz-range-thumb {
 }
 
 @keyframes slideInUp {
-  from { 
+  from {
     opacity: 0;
-    transform: translateY(20px); 
+    transform: translateY(20px);
   }
-  to { 
+  to {
     opacity: 1;
-    transform: translateY(0); 
+    transform: translateY(0);
   }
 }
 
@@ -420,7 +420,7 @@ input[type="range"]::-moz-range-thumb {
   html {
     font-size: 14px;
   }
-  
+
   :root {
     --track-height: 56px;
     --timeline-height: 40px;
@@ -432,7 +432,7 @@ input[type="range"]::-moz-range-thumb {
   html {
     font-size: 13px;
   }
-  
+
   :root {
     --track-height: 48px;
     --timeline-height: 36px;
@@ -460,7 +460,7 @@ input[type="range"]::-moz-range-thumb {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
-  
+
   html {
     scroll-behavior: auto;
   }
@@ -478,7 +478,7 @@ input[type="range"]::-moz-range-thumb {
     color: black !important;
     box-shadow: none !important;
   }
-  
+
   .main-audio-view {
     height: auto !important;
     overflow: visible !important;

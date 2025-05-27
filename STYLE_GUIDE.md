@@ -6,7 +6,7 @@ This style guide is based on the DAW-collab project's coding patterns and design
 
 ### TypeScript Usage
 - **Use TypeScript for all code** - prefer interfaces over types
-- Favor **enums, Sets and Maps** where applicable  
+- Favor **enums, Sets and Maps** where applicable
 - Use **functional components** with TypeScript interfaces
 - Default to **strict TypeScript** settings
 
@@ -46,25 +46,25 @@ This style guide is based on the DAW-collab project's coding patterns and design
   --color-background: #121212;           /* Main dark background */
   --color-background-light: #1a1a1a;     /* Slightly lighter panels */
   --color-background-lighter: #2a2a2a;   /* Input fields, buttons */
-  
+
   /* Primary Colors */
   --color-primary: #ff5500;              /* Orange accent */
   --color-primary-hover: #ff7733;        /* Hover state */
-  
+
   /* Secondary Colors */
   --color-secondary: #3a86ff;            /* Blue accent */
   --color-secondary-hover: #619bff;      /* Hover state */
-  
+
   /* Semantic Colors */
   --color-success: #38b000;              /* Green for success */
   --color-warning: #ffbe0b;              /* Yellow for warnings */
   --color-danger: #ff006e;               /* Pink for danger */
-  
+
   /* Text Colors */
   --color-text-primary: #ffffff;         /* Main text */
   --color-text-secondary: #dddddd;       /* Secondary text */
   --color-text-tertiary: #aaaaaa;        /* Disabled/meta text */
-  
+
   /* Border Colors */
   --color-border: rgba(255, 255, 255, 0.1);
   --color-border-focus: var(--color-primary);
@@ -76,7 +76,7 @@ This style guide is based on the DAW-collab project's coding patterns and design
 :root {
   /* Font Family */
   --font-family-base: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  
+
   /* Font Sizes */
   --font-size-xs: 12px;
   --font-size-sm: 14px;
@@ -197,7 +197,7 @@ function AudioTrack({ id, name, volume, onVolumeChange }: AudioTrackProps) {
   }, [id, onVolumeChange])
 
   return (
-    <div 
+    <div
       className="audio-track"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}

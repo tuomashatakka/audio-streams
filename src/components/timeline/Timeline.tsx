@@ -2,23 +2,25 @@
  * Timeline Component - displays time ruler and playback head
  */
 
-import { useRef, useEffect, useCallback } from 'react'
+import { useRef, useEffect, useCallback, useMemo } from 'react'
 import { TimelineConfig } from '../../types/audio'
 import { formatTime, timeToPixels, pixelsToTime } from '../../utils/audioUtils'
 import './Timeline.css'
 
+
 interface TimelineProps {
-  duration: number
-  currentTime: number
+  duration:        number
+  currentTime:     number
   pixelsPerSecond: number
-  bpm: number
-  timeSignature: { numerator: number; denominator: number }
-  height?: number
-  onScrub: (time: number) => void
-  onZoomChange: (pixelsPerSecond: number) => void
+  bpm:             number
+  timeSignature:   { numerator: number; denominator: number }
+  height?:         number
+  onScrub:         (time: number) => void
+  onZoomChange:    (pixelsPerSecond: number) => void
 }
 
-function Timeline({
+
+function Timeline ({
   duration,
   currentTime,
   pixelsPerSecond,
@@ -28,19 +30,22 @@ function Timeline({
   onScrub,
   onZoomChange
 }: TimelineProps) {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const canvasRef    = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
-  const isDragging = useRef(false)
+  const isDragging   = useRef(false)
 
   const width = timeToPixels(duration, pixelsPerSecond)
 
   // Draw the timeline
+  // eslint-disable-next-line max-statements, complexity
   const drawTimeline = useCallback(() => {
     const canvas = canvasRef.current
-    if (!canvas) return
+    if (!canvas)
+      return
 
     const ctx = canvas.getContext('2d')
-    if (!ctx) return
+    if (!ctx)
+      return
 
     // Set canvas size
     canvas.width = width
@@ -65,17 +70,19 @@ function Timeline({
     if (secondsPerPixel > 0.5) {
       majorInterval = 10
       minorInterval = 2
-    } else if (secondsPerPixel > 0.1) {
+    }
+    else if (secondsPerPixel > 0.1) {
       majorInterval = 5
       minorInterval = 1
-    } else if (secondsPerPixel > 0.02) {
+    }
+    else if (secondsPerPixel > 0.02) {
       majorInterval = 2
       minorInterval = 0.5
     }
 
     // Draw time markers
     for (let time = 0; time <= duration; time += minorInterval) {
-      const x = timeToPixels(time, pixelsPerSecond)
+      const x       = timeToPixels(time, pixelsPerSecond)
       const isMajor = time % majorInterval === 0
 
       // Draw tick mark
@@ -96,13 +103,13 @@ function Timeline({
     // Draw bars/beats markers if zoomed in enough
     if (pixelsPerSecond > 20) {
       const beatsPerSecond = bpm / 60
-      const beatsPerBar = timeSignature.numerator
+      const beatsPerBar    = timeSignature.numerator
       const secondsPerBeat = 1 / beatsPerSecond
-      const secondsPerBar = secondsPerBeat * beatsPerBar
+      const secondsPerBar  = secondsPerBeat * beatsPerBar
 
       for (let time = 0; time <= duration; time += secondsPerBeat) {
-        const x = timeToPixels(time, pixelsPerSecond)
-        const isBarStart = (time % secondsPerBar) < 0.001
+        const x          = timeToPixels(time, pixelsPerSecond)
+        const isBarStart = time % secondsPerBar < 0.001
 
         ctx.strokeStyle = isBarStart ? '#ff5500' : '#ffbe0b'
         ctx.lineWidth = isBarStart ? 2 : 1
@@ -112,26 +119,27 @@ function Timeline({
         ctx.stroke()
       }
     }
-
-  }, [width, height, duration, pixelsPerSecond, bpm, timeSignature])
+  }, [ width, height, duration, pixelsPerSecond, bpm, timeSignature ])
 
   // Handle click/drag for scrubbing
   const handleMouseDown = useCallback((event: React.MouseEvent) => {
-    if (!containerRef.current) return
+    if (!containerRef.current)
+      return
 
     const rect = containerRef.current.getBoundingClientRect()
-    const x = event.clientX - rect.left
+    const x    = event.clientX - rect.left
     const time = pixelsToTime(x, pixelsPerSecond)
-    
+
     isDragging.current = true
     onScrub(Math.max(0, Math.min(time, duration)))
 
     // Add global event listeners for dragging
     const handleMouseMove = (moveEvent: MouseEvent) => {
-      if (!isDragging.current || !containerRef.current) return
-      
+      if (!isDragging.current || !containerRef.current)
+        return
+
       const rect = containerRef.current.getBoundingClientRect()
-      const x = moveEvent.clientX - rect.left
+      const x    = moveEvent.clientX - rect.left
       const time = pixelsToTime(x, pixelsPerSecond)
       onScrub(Math.max(0, Math.min(time, duration)))
     }
@@ -144,73 +152,59 @@ function Timeline({
 
     document.addEventListener('mousemove', handleMouseMove)
     document.addEventListener('mouseup', handleMouseUp)
-  }, [pixelsPerSecond, duration, onScrub])
+  }, [ pixelsPerSecond, duration, onScrub ])
 
   // Handle zoom with mouse wheel
   const handleWheel = useCallback((event: React.WheelEvent) => {
     event.preventDefault()
-    
-    const zoomFactor = event.deltaY > 0 ? 0.9 : 1.1
+
+    const zoomFactor         = event.deltaY > 0 ? 0.9 : 1.1
     const newPixelsPerSecond = Math.max(10, Math.min(200, pixelsPerSecond * zoomFactor))
-    
+
     onZoomChange(newPixelsPerSecond)
-  }, [pixelsPerSecond, onZoomChange])
+  }, [ pixelsPerSecond, onZoomChange ])
 
   // Redraw timeline when props change
   useEffect(() => {
     drawTimeline()
-  }, [drawTimeline])
+  }, [ drawTimeline ])
 
   // Calculate playhead position
   const playheadPosition = timeToPixels(currentTime, pixelsPerSecond)
+  const playheadStyle    = {
+    left:   `${playheadPosition}px`,
+    height: `${height}px`
+  }
 
-  return (
-    <div className="timeline-container" style={{ height }}>
-      <div 
-        ref={containerRef}
-        className="timeline-canvas-container"
-        onMouseDown={handleMouseDown}
-        onWheel={handleWheel}
-        style={{ width }}
-      >
-        <canvas
-          ref={canvasRef}
-          className="timeline-canvas"
-        />
-        
-        {/* Playhead */}
-        <div 
-          className="playhead"
-          style={{ 
-            left: `${playheadPosition}px`,
-            height: `${height}px`
-          }}
-        >
-          <div className="playhead-handle" />
-          <div className="playhead-line" />
-        </div>
-      </div>
+  const zoomOut   = useCallback(() => onZoomChange(pixelsPerSecond * 0.8), [ pixelsPerSecond ])
+  const zoomIn    = useCallback(() => onZoomChange(pixelsPerSecond * 1.125), [ pixelsPerSecond ])
+  const zoomLevel = useMemo(() => Math.round(pixelsPerSecond), [ pixelsPerSecond ])
 
-      {/* Zoom controls */}
-      <div className="timeline-controls">
-        <button 
-          className="zoom-button"
-          onClick={() => onZoomChange(pixelsPerSecond * 0.8)}
-          title="Zoom out"
-        >
-          -
-        </button>
-        <span className="zoom-level">{Math.round(pixelsPerSecond)}px/s</span>
-        <button 
-          className="zoom-button"
-          onClick={() => onZoomChange(pixelsPerSecond * 1.25)}
-          title="Zoom in"
-        >
-          +
-        </button>
+  return <div className='timeline-container' style={{ height }}>
+    <div
+      ref={containerRef}
+      className='timeline-canvas-container'
+      onMouseDown={handleMouseDown}
+      onWheel={handleWheel}
+      style={{ width }}>
+
+      <canvas
+        ref={canvasRef}
+        className='timeline-canvas' />
+
+      <div className='playhead' style={ playheadStyle }>
+        <div className='playhead-handle' />
+        <div className='playhead-line' />
+
       </div>
     </div>
-  )
+
+    <div className='timeline-controls'>
+      <button className='zoom-button' onClick={ zoomOut } title='Zoom out'>-</button>
+      <span className='zoom-level'>{ zoomLevel }px/s</span>
+      <button className='zoom-button' onClick={ zoomIn } title='Zoom in'>+</button>
+    </div>
+  </div>
 }
 
 export default Timeline

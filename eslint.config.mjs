@@ -54,7 +54,7 @@ const config =
         version: 'detect',
       },
     },
-    ignores: [ '**/node_modules/**' ],
+    ignores: [ '**/node_modules/**', 'dist/**' ],
     plugins,
     rules:   {
       'tailwindcss/no-custom-classname': 'off',
@@ -63,7 +63,7 @@ const config =
       'whitespaced/block-padding':           'off',
       'whitespaced/class-property-grouping': 'warn',
       'whitespaced/aligned-assignments':     'warn',
-      'whitespaced/consistent-line-spacing': [ 'warn', {
+      'whitespaced/consistent-line-spacing': [ 'off', {
         beforeImports:      0,
         beforeExports:      1,
         afterImports:       2,
@@ -340,7 +340,7 @@ const config =
         },
       ],
     },
-    files:           [ '**/*.{js,jsx,mjs,cjs,ts,tsx}' ],
+    files:           [ 'src/**/*.{js,jsx,mjs,cjs,ts,tsx}' ],
     languageOptions: {
       ecmaVersion:   'latest',
       sourceType:    'module',
