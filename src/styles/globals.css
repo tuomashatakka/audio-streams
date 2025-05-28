@@ -193,7 +193,7 @@
     margin: 0;
   }
 
-  h1 { 
+  h1 {
     font-size: var(--text-2xl);
     background: linear-gradient(135deg, var(--gradient-heading-start), var(--gradient-heading-mid), var(--gradient-heading-end));
     background-clip: text;
@@ -604,4 +604,21 @@
 }
 .tracks-container {
   overflow: unset;
+}
+
+
+.timeline-canvas {
+  width: 100%;
+  height: 100%;
+}
+.timeline-container {
+  display: block;
+}
+.timeline-svg-container {
+  margin-left: 420px;
+}
+.timeline-container.collapsed
+.timeline-svg-container {
+  display: block;
+  margin-left: 20px;
 }

@@ -1,8 +1,8 @@
 /**
- * Timeline Component - displays time ruler and playback head
+ * Timeline Component - displays time ruler and playback head using SVG
  */
 
-import { useRef, useEffect, useCallback, useMemo, useState } from 'react'
+import { useRef, useCallback, useMemo } from 'react'
 import { formatTime, timeToPixels, pixelsToTime } from '../../utils/audioUtils'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import './Timeline.css'
@@ -34,38 +34,13 @@ function Timeline ({
   onZoomChange,
   onToggleCollapse
 }: TimelineProps) {
-  const canvasRef    = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const isDragging   = useRef(false)
 
   const width = timeToPixels(duration, pixelsPerSecond)
 
-  // Draw the timeline
-  // eslint-disable-next-line max-statements, complexity
-  const drawTimeline = useCallback(() => {
-    const canvas = canvasRef.current
-    if (!canvas)
-      return
-
-    const ctx = canvas.getContext('2d')
-    if (!ctx)
-      return
-
-    // Set canvas size
-    canvas.width = width
-    canvas.height = height
-
-    // Clear canvas
-    ctx.fillStyle = '#222222'
-    ctx.fillRect(0, 0, width, height)
-
-    // Set text properties
-    ctx.fillStyle = 'currentColor'
-    ctx.font = '10px system-ui'
-    ctx.textAlign = 'left'
-    ctx.textBaseline = 'top'
-
-    // Calculate time intervals for markers
+  // Generate timeline markers data
+  const timelineData = useMemo(() => {
     const secondsPerPixel = 1 / pixelsPerSecond
     let majorInterval     = 1 // seconds
     let minorInterval     = 0.25 // seconds
@@ -84,27 +59,23 @@ function Timeline ({
       minorInterval = 0.5
     }
 
-    // Draw time markers
+    const timeMarkers = []
+    const beatMarkers = []
+
+    // Generate time markers
     for (let time = 0; time <= duration; time += minorInterval) {
       const x       = timeToPixels(time, pixelsPerSecond)
       const isMajor = time % majorInterval === 0
 
-      // Draw tick mark
-      ctx.strokeStyle = isMajor ? '#666666' : '#444444'
-      ctx.lineWidth = 1
-      ctx.beginPath()
-      ctx.moveTo(x, height - (isMajor ? 20 : 10))
-      ctx.lineTo(x, height)
-      ctx.stroke()
-
-      // Draw time label for major ticks
-      if (isMajor && x > 0) {
-        ctx.fillStyle = '#aaaaaa'
-        ctx.fillText(formatTime(time), x + 2, height - 32)
-      }
+      timeMarkers.push({
+        x,
+        time,
+        isMajor,
+        label: isMajor && x > 0 ? formatTime(time) : null
+      })
     }
 
-    // Draw bars/beats markers if zoomed in enough
+    // Generate beat/bar markers if zoomed in enough
     if (pixelsPerSecond > 20) {
       const beatsPerSecond = bpm / 60
       const beatsPerBar    = timeSignature.numerator
@@ -115,15 +86,15 @@ function Timeline ({
         const x          = timeToPixels(time, pixelsPerSecond)
         const isBarStart = time % secondsPerBar < 0.001
 
-        ctx.strokeStyle = isBarStart ? '#ff5500' : '#ffbe0b'
-        ctx.lineWidth = isBarStart ? 2 : 1
-        ctx.beginPath()
-        ctx.moveTo(x, 0)
-        ctx.lineTo(x, isBarStart ? 15 : 8)
-        ctx.stroke()
+        beatMarkers.push({
+          x,
+          isBarStart
+        })
       }
     }
-  }, [ width, height, duration, pixelsPerSecond, bpm, timeSignature ])
+
+    return { timeMarkers, beatMarkers }
+  }, [ duration, pixelsPerSecond, bpm, timeSignature ])
 
   // Handle click/drag for scrubbing
   const handleMouseDown = useCallback((event: React.MouseEvent) => {
@@ -172,11 +143,6 @@ function Timeline ({
     onZoomChange(newPixelsPerSecond)
   }, [ pixelsPerSecond, onZoomChange ])
 
-  // Redraw timeline when props change
-  useEffect(() => {
-    drawTimeline()
-  }, [ drawTimeline ])
-
   // Calculate playhead position
   const playheadPosition = timeToPixels(currentTime, pixelsPerSecond)
 
@@ -187,13 +153,67 @@ function Timeline ({
   return <div className={`timeline-container ${isDragging.current ? 'scrubbing' : ''} ${isCollapsed ? 'collapsed' : ''}`} style={{ height }}>
     <div
       ref={containerRef}
-      className='timeline-canvas-container'
+      className='timeline-svg-container'
       onMouseDown={handleMouseDown}
       onWheel={handleWheel}
       style={{ width }}
     >
-      <canvas ref={canvasRef} className='timeline-canvas' />
+      <svg 
+        className='timeline-svg' 
+        width={width} 
+        height={height}
+        viewBox={`0 0 ${width} ${height}`}
+        role="img"
+        aria-label={`Timeline showing ${formatTime(duration)} duration, current time ${formatTime(currentTime)}`}
+      >
+        {/* Background */}
+        <rect 
+          width={width} 
+          height={height} 
+          fill="#222222" 
+        />
 
+        {/* Beat/Bar markers */}
+        {timelineData.beatMarkers.map((marker, index) => (
+          <line
+            key={`beat-${index}`}
+            x1={marker.x}
+            y1={0}
+            x2={marker.x}
+            y2={marker.isBarStart ? 15 : 8}
+            stroke={marker.isBarStart ? '#ff5500' : '#ffbe0b'}
+            strokeWidth={marker.isBarStart ? 2 : 1}
+          />
+        ))}
+
+        {/* Time markers */}
+        {timelineData.timeMarkers.map((marker, index) => (
+          <g key={`time-${index}`}>
+            <line
+              x1={marker.x}
+              y1={height - (marker.isMajor ? 20 : 10)}
+              x2={marker.x}
+              y2={height}
+              stroke={marker.isMajor ? '#666666' : '#444444'}
+              strokeWidth={1}
+            />
+            {marker.label && (
+              <text
+                x={marker.x + 2}
+                y={height - 32}
+                fill="#aaaaaa"
+                fontSize="10"
+                fontFamily="system-ui"
+                dominantBaseline="hanging"
+              >
+                {marker.label}
+              </text>
+            )}
+          </g>
+        ))}
+      </svg>
+
+      {/* Playhead */}
       <div
         className='playhead'
         style={{
