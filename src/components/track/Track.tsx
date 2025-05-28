@@ -11,21 +11,22 @@ import './Track.css'
 
 
 interface TrackProps {
-  track:           AudioTrackType
-  pixelsPerSecond: number
-  trackHeight:     number
-  projectDuration: number
-  selectedClipId?: string | null
-  onTrackUpdate:   (trackId: string, updates: Partial<AudioTrackType>) => void
-  onClipSelect:    (clipId: string) => void
-  onClipMove:      (clipId: string, newStartTime: number) => void
-  onClipResize:    (clipId: string, newDuration: number) => void
-  onTrackHover?:   (trackId: string | null) => void
-  isHovered?:      boolean
+  track:            AudioTrackType
+  pixelsPerSecond:  number
+  trackHeight:      number
+  projectDuration:  number
+  selectedClipId?:  string | null
+  onTrackUpdate:    (trackId: string, updates: Partial<AudioTrackType>) => void
+  onClipSelect:     (clipId: string) => void
+  onClipMove:       (clipId: string, newStartTime: number) => void
+  onClipResize:     (clipId: string, newDuration: number) => void
+  onTrackHover?:    (trackId: string | null) => void
+  isHovered?:       boolean
   showPlaceholder?: boolean
 }
 
 
+// eslint-disable-next-line complexity
 function Track ({
   track,
   pixelsPerSecond,
@@ -71,26 +72,22 @@ function Track ({
 
   // Handle track hover for drag and drop
   const handleMouseEnter = useCallback(() => {
-    if (showPlaceholder) {
+    if (showPlaceholder)
       onTrackHover?.(track.id)
-    }
-  }, [showPlaceholder, onTrackHover, track.id])
+  }, [ showPlaceholder, onTrackHover, track.id ])
 
   const handleMouseLeave = useCallback(() => {
-    if (showPlaceholder) {
+    if (showPlaceholder)
       onTrackHover?.(null)
-    }
-  }, [showPlaceholder, onTrackHover])
+  }, [ showPlaceholder, onTrackHover ])
 
-  return (
-    <div 
-      className={`audio-track ${isHovered ? 'hovered' : ''} ${showPlaceholder ? 'drag-target' : ''}`}
-      style={{ height: trackHeight }}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-    >
+  return <div
+    className={`audio-track ${isHovered ? 'hovered' : ''} ${showPlaceholder ? 'drag-target' : ''}`}
+    onMouseEnter={handleMouseEnter}
+    onMouseLeave={handleMouseLeave}>
+
     {/* Track header/controls */}
-    <div className='track-header'>
+    <header className='track-header'>
       <input
         type='text'
         value={track.name}
@@ -113,14 +110,13 @@ function Track ({
         <button
           className={`track-button solo-button ${track.solo ? 'active' : ''}`}
           onClick={handleSoloToggle}
-          title={track.solo ? 'Unsolo' : 'Solo'}
-        >
+          title={track.solo ? 'Unsolo' : 'Solo'}>
           <Headphones size={14} />
         </button>
 
         {/* Volume slider */}
-        <div className='slider-container'>
-          <label className='slider-label'>Vol</label>
+        <label className='slider-container'>
+          <span className='slider-label'>Vol</span>
 
           <input
             type='range'
@@ -133,12 +129,12 @@ function Track ({
             title={`Volume: ${Math.round(track.volume * 100)}%`}
           />
 
-          <span className='slider-value'>{Math.round(track.volume * 100)}</span>
-        </div>
+          <output className='slider-value'>{Math.round(track.volume * 100)}</output>
+        </label>
 
         {/* Pan slider */}
-        <div className='slider-container'>
-          <label className='slider-label'>Pan</label>
+        <label className='slider-container'>
+          <span className='slider-label'>Pan</span>
 
           <input
             type='range'
@@ -151,50 +147,49 @@ function Track ({
             title={`Pan: ${track.pan > 0 ? 'R' : track.pan < 0 ? 'L' : 'C'}${Math.abs(Math.round(track.pan * 100))}`}
           />
 
-          <span className='slider-value'>
+          <output className='slider-value'>
             {track.pan === 0 ? 'C' : `${track.pan > 0 ? 'R' : 'L'}${Math.abs(Math.round(track.pan * 100))}`}
-          </span>
-        </div>
+          </output>
+        </label>
       </div>
-    </div>
+    </header>
 
-      {/* Track content area */}
-      <div className='track-content' style={{ width: trackWidth }}>
-        {/* Track background/lane */}
-        <div
-          className='track-lane'
-          style={{
-            width: trackWidth,
-            height: trackHeight - 40, // Subtract header height
-            borderLeft: `3px solid ${track.color}`
-          }}
+    {/* Track content area */}
+    <div className='track-content' style={{ width: trackWidth }}>
+      {/* Track background/lane */}
+      <div
+        className='track-lane'
+        style={{
+          width:      trackWidth,
+          height:     trackHeight, // Subtract header height
+          borderLeft: `3px solid ${track.color}`
+        }}
+      />
+
+      {/* Audio clips */}
+      {track.clips.map(clip =>
+        <Clip
+          key={clip.id}
+          clip={clip}
+          pixelsPerSecond={pixelsPerSecond}
+          trackHeight={trackHeight} // Subtract header height
+          isSelected={selectedClipId === clip.id}
+          onSelect={onClipSelect}
+          onMove={onClipMove}
+          onResize={onClipResize}
         />
+      )}
 
-        {/* Audio clips */}
-        {track.clips.map(clip => (
-          <Clip
-            key={clip.id}
-            clip={clip}
-            pixelsPerSecond={pixelsPerSecond}
-            trackHeight={trackHeight - 40} // Subtract header height
-            isSelected={selectedClipId === clip.id}
-            onSelect={onClipSelect}
-            onMove={onClipMove}
-            onResize={onClipResize}
-          />
-        ))}
-
-        {/* Placeholder when hovering during drag */}
-        {isHovered && showPlaceholder && (
-          <div className='clip-placeholder'>
-            <div className='placeholder-content'>
-              <span>Drop audio file here</span>
-            </div>
+      {/* Placeholder when hovering during drag */}
+      {isHovered && showPlaceholder &&
+        <div className='clip-placeholder'>
+          <div className='placeholder-content'>
+            <span>Drop audio file here</span>
           </div>
-        )}
-      </div>
+        </div>
+      }
     </div>
-  )
+  </div>
 }
 
 export default Track

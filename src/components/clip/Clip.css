@@ -1,16 +1,16 @@
 .audio-clip {
   position: absolute;
   top: 4px;
-  left: 0; /* Use transform for horizontal positioning */
-  border: 2px solid transparent;
-  border-radius: 4px;
+  left: 0;
+  border: 0 solid transparent;
+  border-radius: var(--roundness, 1.5px);
   cursor: grab;
   user-select: none;
   overflow: hidden;
   background: linear-gradient(135deg, var(--color, #3a86ff), var(--color, #3a86ff)dd);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  transition: all 0.2s ease;
-  will-change: transform; /* Optimize for transform animations */
+  transition: all 40ms linear;
+  will-change: transform;
 }
 
 .audio-clip:hover {
@@ -118,11 +118,11 @@
   .audio-clip {
     min-width: 60px;
   }
-  
+
   .clip-label {
     font-size: 9px;
   }
-  
+
   .clip-time {
     display: none;
   }

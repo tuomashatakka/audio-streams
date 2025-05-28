@@ -2,7 +2,7 @@
  * Audio Clip Component - represents a single audio clip on a track
  */
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react'
 import { AudioClip } from '../../types/audio'
 import { timeToPixels, formatTime } from '../../utils/audioUtils'
 import Waveform from '../waveform/Waveform'
@@ -29,20 +29,30 @@ function Clip ({
   onMove,
   onResize
 }: ClipProps) {
-  const [ isDragging, setIsDragging ]       = useState(false)
-  const [ isResizing, setIsResizing ]       = useState(false)
-  const [ dragStartX, setDragStartX ]       = useState(0)
-  const [ dragStartTime, setDragStartTime ] = useState(0)
-  const [ tempStartTime, setTempStartTime ] = useState(clip.startTime)
-  const [ tempDuration, setTempDuration ]   = useState(clip.duration)
+  const nodeRef     = useRef<HTMLDivElement>(null)
+  const modifyState = useRef({
+    dragging:  false,
+    resizing:  false,
+    startTime: clip.startTime,
+    duration:  clip.duration,
+    startX:    0,
+  })
+
 
   // Calculate clip dimensions (use temp values during drag/resize)
-  const displayStartTime = isDragging ? tempStartTime : clip.startTime
-  const displayDuration = isResizing ? tempDuration : clip.duration
-  
-  const clipWidth = timeToPixels(displayDuration, pixelsPerSecond)
-  const clipLeft = timeToPixels(displayStartTime, pixelsPerSecond)
-  const clipHeight = trackHeight - 8 // Small margin
+  const displayStartTime = useMemo(() => modifyState.current.dragging ? modifyState.current.startTime : clip.startTime, [ modifyState, clip.startTime ])
+  const displayDuration  = useMemo(() => modifyState.current.resizing ? modifyState.current.duration : clip.duration, [ modifyState, clip.duration ])
+
+  const clipLeft   = timeToPixels(displayStartTime, pixelsPerSecond)
+  const clipWidth  = timeToPixels(displayDuration, pixelsPerSecond)
+  const clipHeight = useMemo(() => trackHeight - 4, [ trackHeight ])
+
+  console.log(clipLeft, displayStartTime)
+
+  const setDragStart = (x: number, startTime: number) => {
+    modifyState.current.startX = x
+    modifyState.current.startTime = startTime
+  }
 
   // Handle clip selection
   const handleClick = useCallback((event: React.MouseEvent) => {
@@ -63,12 +73,11 @@ function Clip ({
 
     // Check if clicking near the right edge for resizing
     if (clickX > clipWidth - 10)
-      setIsResizing(true)
+      modifyState.current.resizing = true
     else
-      setIsDragging(true)
+      modifyState.current.dragging = true
 
-    setDragStartX(event.clientX)
-    setDragStartTime(clip.startTime)
+    setDragStart(event.clientX, clip.startTime)
 
     // Add global event listeners
     document.addEventListener('mousemove', handleMouseMove)
@@ -76,85 +85,85 @@ function Clip ({
   }, [ clip.startTime, clipWidth ])
 
   // Handle drag/resize movement (visual only during drag)
-  const handleMouseMove = useCallback((event: MouseEvent) => {
-    const deltaX    = event.clientX - dragStartX
+  const handleMouseMove = (event: MouseEvent) => {
+    const deltaX    = event.clientX - modifyState.current.startX
     const deltaTime = deltaX / pixelsPerSecond
 
-    if (isDragging) {
-      const newStartTime = Math.max(0, dragStartTime + deltaTime)
-      setTempStartTime(newStartTime)
+    console.log(deltaX, modifyState.current, deltaTime)
+
+    if (modifyState.current.dragging) {
+      const newStartTime = Math.max(0, clip.startTime + deltaTime)
+      modifyState.current.startTime = newStartTime
     }
-    else if (isResizing) {
+    else if (modifyState.current.resizing) {
       const newDuration = Math.max(0.1, clip.duration + deltaTime)
-      setTempDuration(newDuration)
+      modifyState.current.duration = newDuration
     }
-  }, [ isDragging, isResizing, dragStartX, dragStartTime, pixelsPerSecond, clip.duration ])
+
+    nodeRef.current?.style.setProperty('transform', `translateX(${timeToPixels(modifyState.current.startTime, pixelsPerSecond)}px`)
+  }
 
   // Handle drag/resize end (commit changes)
-  const handleMouseUp = useCallback(() => {
+  const handleMouseUp = () => {
     // Commit the changes when drag/resize ends
-    if (isDragging) {
-      onMove?.(clip.id, tempStartTime)
-    }
-    else if (isResizing) {
-      onResize?.(clip.id, tempDuration)
-    }
+    if (modifyState.current.dragging)
+      onMove?.(clip.id, modifyState.current.startTime)
+    else if (modifyState.current.resizing)
+      onResize?.(clip.id, modifyState.current.duration)
 
-    setIsDragging(false)
-    setIsResizing(false)
+    modifyState.current.dragging = false
+    modifyState.current.resizing = false
 
     // Remove global event listeners
     document.removeEventListener('mousemove', handleMouseMove)
     document.removeEventListener('mouseup', handleMouseUp)
-  }, [ isDragging, isResizing, tempStartTime, tempDuration, clip.id, onMove, onResize, handleMouseMove ])
+  }
 
   // Reset temp values when clip props change
   useEffect(() => {
-    setTempStartTime(clip.startTime)
-    setTempDuration(clip.duration)
-  }, [clip.startTime, clip.duration])
+    modifyState.current.startTime = clip.startTime
+    modifyState.current.duration = clip.duration
+  }, [ clip.startTime, clip.duration ])
 
-  return (
-    <div
-      className={`audio-clip ${isSelected ? 'selected' : ''} ${isDragging ? 'dragging' : ''} ${isResizing ? 'resizing' : ''}`}
-      style={{
-        transform: `translateX(${clipLeft}px)`,
-        width: `${clipWidth}px`,
-        height: `${clipHeight}px`,
-        backgroundColor: clip.color || '#3a86ff',
-        borderColor: isSelected ? '#ff5500' : 'transparent'
-      }}
-      onClick={handleClick}
-      onMouseDown={handleMouseDown}
-      title={`${clip.name} - ${formatTime(clip.duration)}`}
-    >
-      {clip.isLoading ? (
-        <div className='clip-loading'>
-          <div className='loading-spinner' />
-          <span>Processing...</span>
+  return <div
+    className={`audio-clip ${isSelected ? 'selected' : ''} ${modifyState.current.dragging ? 'dragging' : ''} ${modifyState.current.resizing ? 'resizing' : ''}`}
+    style={{
+      transform:       `translateX(${clipLeft}px)`,
+      width:           `${clipWidth}px`,
+      height:          `${clipHeight}px`,
+      backgroundColor: `${clip.color}40` || '#3a86ff40',
+      borderColor:     isSelected ? `${clip.color}a0` : 'transparent'
+    }}
+    onClick={handleClick}
+    onMouseDown={handleMouseDown}
+    title={`${clip.name} - ${formatTime(clip.duration)}`}
+    ref={nodeRef}
+  >
+    {clip.isLoading
+      ? <div className='clip-loading'>
+        <div className='loading-spinner' />
+        <span>Processing...</span>
+      </div>
+      : <>
+        {clip.waveformData.length > 0 &&
+          <Waveform
+            waveformData={clip.waveformData}
+            width={clipWidth - 4}
+            height={clipHeight - 4} // Leave space for label
+            color={clip.color}
+            className='clip-waveform'
+          />
+        }
+
+        <div className='clip-label'>
+          <span className='clip-name'>{clip.name}</span>
+          <span className='clip-time'>{formatTime(clip.duration)}</span>
         </div>
-      ) : (
-        <>
-          {clip.waveformData.length > 0 && (
-            <Waveform
-              waveformData={clip.waveformData}
-              width={clipWidth}
-              height={clipHeight - 20} // Leave space for label
-              color='rgba(255, 255, 255, 0.8)'
-              className='clip-waveform'
-            />
-          )}
 
-          <div className='clip-label'>
-            <span className='clip-name'>{clip.name}</span>
-            <span className='clip-time'>{formatTime(clip.duration)}</span>
-          </div>
-
-          <div className='resize-handle' />
-        </>
-      )}
-    </div>
-  )
+        <div className='resize-handle' />
+      </>
+    }
+  </div>
 }
 
 

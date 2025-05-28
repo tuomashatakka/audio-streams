@@ -14,7 +14,13 @@ import './MainAudioView.css'
 import '../styles/drag-drop.css'
 
 function MainAudioView () {
-  const { state, dispatch, resumeAudioContext, samplesToSeconds, secondsToSamples, handleFilesSelected } = useAudioEngine()
+  const {
+    state,
+    dispatch,
+    resumeAudioContext,
+    samplesToSeconds,
+    secondsToSamples,
+    handleFilesSelected } = useAudioEngine()
   const hotkeysHandlerRef = useRef<HotkeysHandler | null>(null)
 
   // Playback controls
@@ -32,19 +38,17 @@ function MainAudioView () {
   }, [ dispatch ])
 
   const handleTogglePlayback = useCallback(() => {
-    if (state.audioEngine.isPlaying) {
+    if (state.audioEngine.isPlaying)
       handlePause()
-    } else {
+    else
       handlePlay()
-    }
-  }, [state.audioEngine.isPlaying, handlePlay, handlePause])
+  }, [ state.audioEngine.isPlaying, handlePlay, handlePause ])
 
   const handleRestartPlayback = useCallback(() => {
     dispatch({ type: 'SET_CURRENT_SAMPLES', samples: 0 })
-    if (!state.audioEngine.isPlaying) {
+    if (!state.audioEngine.isPlaying)
       handlePlay()
-    }
-  }, [dispatch, state.audioEngine.isPlaying, handlePlay])
+  }, [ dispatch, state.audioEngine.isPlaying, handlePlay ])
 
   const handleUserGesture = useCallback(async () => {
     console.log('User gesture detected - resuming AudioContext')
@@ -90,40 +94,47 @@ function MainAudioView () {
     dispatch({ type: 'SET_PIXELS_PER_SECOND', pixelsPerSecond: newPixelsPerSecond })
   }, [ dispatch ])
 
+  const onNudgeLeft    = () => handleClipMove(state.ui.selectedClipId || '', -0.1)
+  const onNudgeRight   = () => handleClipMove(state.ui.selectedClipId || '', +0.1)
+  const onShortenClip  = () => handleClipResize(state.ui.selectedClipId || '', -1)
+  const onLengthenClip = () => handleClipResize(state.ui.selectedClipId || '', +1)
+
   // Get clips for a track
   const getTrackClips = useCallback((trackId: string) => {
     const track = state.project.tracks.find(t => t.id === trackId)
-    if (!track) return []
-    
+    if (!track)
+      return []
+
     return track.clipIds
       .map(clipId => state.clips.find(clip => clip.id === clipId))
       .filter(Boolean) as AudioClip[]
-  }, [state.project.tracks, state.clips])
+  }, [ state.project.tracks, state.clips ])
 
   // Get currently selected clip
   const getSelectedClip = useCallback((): AudioClip | null => {
-    if (!state.ui.selectedClipId) return null
+    if (!state.ui.selectedClipId)
+      return null
     return state.clips.find(clip => clip.id === state.ui.selectedClipId) || null
-  }, [state.ui.selectedClipId, state.clips])
+  }, [ state.ui.selectedClipId, state.clips ])
 
   // Hotkeys configuration
   const hotkeysConfig: HotkeysConfig = {
     // Clip manipulation
-    onNudgeLeft: handleClipMove,
-    onNudgeRight: handleClipMove,
-    onShortenClip: handleClipResize,
-    onLengthenClip: handleClipResize,
-    
+    onNudgeLeft,
+    onNudgeRight,
+    onShortenClip,
+    onLengthenClip,
+
     // Playback control
-    onTogglePlayback: handleTogglePlayback,
+    onTogglePlayback:  handleTogglePlayback,
     onRestartPlayback: handleRestartPlayback,
-    
+
     // State getters
     getSelectedClip,
-    getBPM: () => state.project.bpm,
-    getTimeSignature: () => state.project.timeSignature,
+    getBPM:             () => state.project.bpm,
+    getTimeSignature:   () => state.project.timeSignature,
     getProjectDuration: () => state.project.duration,
-    isPlaying: () => state.audioEngine.isPlaying
+    isPlaying:          () => state.audioEngine.isPlaying
   }
 
   // Initialize and cleanup hotkeys
@@ -141,12 +152,11 @@ function MainAudioView () {
 
   // Update hotkeys config when handlers change
   useEffect(() => {
-    if (hotkeysHandlerRef.current) {
+    if (hotkeysHandlerRef.current)
       hotkeysHandlerRef.current.updateConfig(hotkeysConfig)
-    }
   }, [
     handleClipMove,
-    handleClipResize, 
+    handleClipResize,
     handleTogglePlayback,
     handleRestartPlayback,
     getSelectedClip,
@@ -159,8 +169,8 @@ function MainAudioView () {
   // Drag and drop handling for tracks area
   const { dragProps } = useDroppable({
     onFilesDropped: handleFilesSelected,
-    onDragEnter: () => {
-      dispatch({ type: 'SET_DRAG_STATE', dragState: { isDragging: true, dragType: 'file' } })
+    onDragEnter:    () => {
+      dispatch({ type: 'SET_DRAG_STATE', dragState: { isDragging: true, dragType: 'file' }})
     },
     onDragLeave: () => {
       dispatch({ type: 'RESET_DRAG_STATE' })
@@ -169,24 +179,19 @@ function MainAudioView () {
 
   // Track hover handling for drag and drop
   const handleTrackHover = useCallback((trackId: string | null) => {
-    if (state.ui.dragState.isDragging && state.ui.dragState.dragType === 'file') {
-      dispatch({ type: 'SET_DRAG_STATE', dragState: { hoveredTrackId: trackId } })
-    }
-  }, [dispatch, state.ui.dragState])
-
-  const handleFilesDropped = useCallback((files: File[]) => {
-    handleFilesSelected(files)
-  }, [handleFilesSelected])
+    if (state.ui.dragState.isDragging && state.ui.dragState.dragType === 'file')
+      dispatch({ type: 'SET_DRAG_STATE', dragState: { hoveredTrackId: trackId }})
+  }, [ dispatch, state.ui.dragState ])
 
   const currentTime = samplesToSeconds(state.audioEngine.currentSamples)
 
   return <div className='main-audio-view'>
     {/* Hotkeys indicator */}
-    {hotkeysHandlerRef.current?.enabled && (
+    {hotkeysHandlerRef.current?.enabled &&
       <div className='hotkeys-indicator' title='Keyboard shortcuts are active'>
         🎹
       </div>
-    )}
+    }
 
     <PlaybackControls
       isPlaying={state.audioEngine.isPlaying}
@@ -216,42 +221,41 @@ function MainAudioView () {
         />
 
         <div className='tracks-container'>
-          {state.project.tracks.length === 0 ? (
+          {state.project.tracks.length === 0 &&
             <div className='empty-tracks-message'>
               <p>Drop audio files here to get started</p>
             </div>
-          ) : (
-            state.project.tracks.map(track => {
-              const trackClips = getTrackClips(track.id)
-              return (
-                <Track
-                  key={track.id}
-                  track={{ ...track, clips: trackClips }}
-                  pixelsPerSecond={state.ui.pixelsPerSecond}
-                  trackHeight={64}
-                  projectDuration={state.project.duration}
-                  selectedClipId={state.ui.selectedClipId}
-                  onTrackUpdate={handleTrackUpdate}
-                  onClipSelect={handleClipSelect}
-                  onClipMove={handleClipMove}
-                  onClipResize={handleClipResize}
-                  onTrackHover={handleTrackHover}
-                  isHovered={state.ui.dragState.hoveredTrackId === track.id}
-                  showPlaceholder={state.ui.dragState.isDragging && state.ui.dragState.dragType === 'file'}
-                />
-              )
-            })
-          )}
-          
-          {state.ui.dragState.isDragging && 
-           state.ui.dragState.dragType === 'file' && 
-           !state.ui.dragState.hoveredTrackId && (
+          }
+
+          { state.project.tracks.map(track => {
+            const trackClips = getTrackClips(track.id)
+            return <Track
+              key={track.id}
+              track={{ ...track, clips: trackClips }}
+              pixelsPerSecond={state.ui.pixelsPerSecond}
+              trackHeight={64}
+              projectDuration={state.project.duration}
+              selectedClipId={state.ui.selectedClipId}
+              onTrackUpdate={handleTrackUpdate}
+              onClipSelect={handleClipSelect}
+              onClipMove={handleClipMove}
+              onClipResize={handleClipResize}
+              onTrackHover={handleTrackHover}
+              isHovered={state.ui.dragState.hoveredTrackId === track.id}
+              showPlaceholder={state.ui.dragState.isDragging && state.ui.dragState.dragType === 'file'}
+            />
+          })
+          }
+
+          {state.ui.dragState.isDragging &&
+           state.ui.dragState.dragType === 'file' &&
+           !state.ui.dragState.hoveredTrackId &&
             <div className='new-track-placeholder'>
               <div className='placeholder-content'>
                 <span>Drop here to create new track</span>
               </div>
             </div>
-          )}
+          }
         </div>
       </div>
     </div>

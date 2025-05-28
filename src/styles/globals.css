@@ -90,9 +90,10 @@
   --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1), 0 8px 10px rgba(0, 0, 0, 0.04);
 
   /* Border Radius */
-  --radius-sm: 2px;
-  --radius-md: 4px;
-  --radius-lg: 8px;
+  --roundness: 1.5px;
+  --radius-sm: var(--roundness);
+  --radius-md: var(--roundness);
+  --radius-lg: var(--roundness);
 
   /* Transitions */
   --duration-instant: 0ms;
@@ -126,6 +127,10 @@
   *::before,
   *::after {
     box-sizing: border-box;
+  }
+
+  :root {
+    overscroll-behavior: none;
   }
 }
 
@@ -488,5 +493,32 @@
   .main-audio-view {
     height: auto !important;
     overflow: visible !important;
+  }
+}
+
+
+
+
+
+/* Waveforms */
+.audio-waveform {
+  display: block;
+
+  .background {
+    fill: transparent;
+    stroke-width: 0;
+  }
+
+  .stroke {
+    fill: transparent;
+    stroke: currentColor;
+    stroke-width: 0.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .fill {
+    fill: currentColor;
+    stroke: transparent;
+    stroke-width: 0;
   }
 }

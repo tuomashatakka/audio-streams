@@ -19,40 +19,40 @@ interface AppState {
   project: Omit<AudioProject, 'tracks'> & {
     tracks: Array<Omit<AudioTrack, 'clips'> & { clipIds: string[] }>
   }
-  
+
   // Separate clips storage
   clips: AudioClip[]
-  
+
   // Audio engine state
   audioEngine: {
-    isPlaying: boolean
-    currentSamples: number
-    isLooping: boolean
+    isPlaying:        boolean
+    currentSamples:   number
+    isLooping:        boolean
     loopStartSamples: number
-    loopEndSamples: number
-    volume: number
-    sampleRate: number
-    isInitialized: boolean
+    loopEndSamples:   number
+    volume:           number
+    sampleRate:       number
+    isInitialized:    boolean
   }
-  
+
   // UI state
   ui: {
-    selectedClipId: string | null
+    selectedClipId:  string | null
     pixelsPerSecond: number
-    isProcessing: boolean
+    isProcessing:    boolean
     dragState: {
-      isDragging: boolean
-      dragType: 'file' | null
-      hoveredTrackId: string | null
+      isDragging:              boolean
+      dragType:                'file' | null
+      hoveredTrackId:          string | null
       showNewTrackPlaceholder: boolean
       placeholderClip: {
-        trackId: string
+        trackId:   string
         startTime: number
-        name: string
+        name:      string
       } | null
     }
   }
-  
+
   // File processing
   fileProcessing: FileProcessingState[]
 }
@@ -71,7 +71,7 @@ type AppAction =
   | { type: 'UPDATE_PROCESSING_FILE'; id: string; updates: Partial<FileProcessingState> }
   | { type: 'REMOVE_PROCESSING_FILE'; id: string }
   | { type: 'ADD_CLIP'; clip: AudioClip }
-  | { type: 'ADD_TRACK'; track: Omit<AudioTrack, 'clips'> & { clipIds: string[] } }
+  | { type: 'ADD_TRACK'; track: Omit<AudioTrack, 'clips'> & { clipIds: string[] }}
   | { type: 'ASSIGN_CLIP_TO_TRACK'; clipId: string; trackId: string }
   | { type: 'UPDATE_TRACK'; trackId: string; updates: Partial<Omit<AudioTrack, 'clips'>> }
   | { type: 'UPDATE_CLIP'; clipId: string; updates: Partial<AudioClip> }
@@ -82,34 +82,34 @@ type AppAction =
 // Initial state
 const initialState: AppState = {
   project: {
-    id: generateId(),
-    name: 'New Project',
-    tracks: [],
-    bpm: 120,
+    id:            generateId(),
+    name:          'New Project',
+    tracks:        [],
+    bpm:           120,
     timeSignature: { numerator: 4, denominator: 4 },
-    duration: 16
+    duration:      16
   },
-  clips: [],
+  clips:       [],
   audioEngine: {
-    isPlaying: false,
-    currentSamples: 0,
-    isLooping: false,
+    isPlaying:        false,
+    currentSamples:   0,
+    isLooping:        false,
     loopStartSamples: 0,
-    loopEndSamples: 48000 * 16, // 16 seconds at 48kHz
-    volume: 0.8,
-    sampleRate: 48000,
-    isInitialized: false
+    loopEndSamples:   44100 * 16, // 16 seconds at 48kHz
+    volume:           0.8,
+    sampleRate:       44100,
+    isInitialized:    false
   },
   ui: {
-    selectedClipId: null,
+    selectedClipId:  null,
     pixelsPerSecond: 50,
-    isProcessing: false,
-    dragState: {
-      isDragging: false,
-      dragType: null,
-      hoveredTrackId: null,
+    isProcessing:    false,
+    dragState:       {
+      isDragging:              false,
+      dragType:                null,
+      hoveredTrackId:          null,
       showNewTrackPlaceholder: false,
-      placeholderClip: null
+      placeholderClip:         null
     }
   },
   fileProcessing: []
@@ -183,52 +183,49 @@ function appReducer (state: AppState, action: AppAction): AppState {
     case 'ADD_CLIP':
       return {
         ...state,
-        clips: [...state.clips, action.clip]
+        clips: [ ...state.clips, action.clip ]
       }
-      
     case 'ADD_TRACK': {
-      const updatedTracks = [...state.project.tracks, action.track]
-      // Calculate duration using current clips
+      const updatedTracks   = [ ...state.project.tracks, action.track ]
       const tracksWithClips = updatedTracks.map(track => ({
         ...track,
         clips: track.clipIds.map(clipId => state.clips.find(clip => clip.id === clipId)).filter(Boolean) as AudioClip[]
       }))
-      const newDuration = calculateProjectDuration(tracksWithClips)
-      
+      const newDuration     = calculateProjectDuration(tracksWithClips)
+
       return {
         ...state,
         project: {
           ...state.project,
-          tracks: updatedTracks,
+          tracks:   updatedTracks,
           duration: newDuration
         }
       }
     }
-    
+
     case 'ASSIGN_CLIP_TO_TRACK': {
       const updatedTracks = state.project.tracks.map(track =>
         track.id === action.trackId
-          ? { ...track, clipIds: [...track.clipIds, action.clipId] }
+          ? { ...track, clipIds: [ ...track.clipIds, action.clipId ]}
           : track
       )
-      
+
       // Calculate new duration
       const tracksWithClips = updatedTracks.map(track => ({
         ...track,
         clips: track.clipIds.map(clipId => state.clips.find(clip => clip.id === clipId)).filter(Boolean) as AudioClip[]
       }))
-      const newDuration = calculateProjectDuration(tracksWithClips)
-      
+      const newDuration     = calculateProjectDuration(tracksWithClips)
+
       return {
         ...state,
         project: {
           ...state.project,
-          tracks: updatedTracks,
+          tracks:   updatedTracks,
           duration: newDuration
         }
       }
     }
-    
     case 'UPDATE_TRACK':
       return {
         ...state,
@@ -239,39 +236,36 @@ function appReducer (state: AppState, action: AppAction): AppState {
           )
         }
       }
-      
     case 'UPDATE_CLIP': {
       const updatedClips = state.clips.map(clip =>
         clip.id === action.clipId ? { ...clip, ...action.updates } : clip
       )
-      
+
       // Recalculate duration
       const tracksWithClips = state.project.tracks.map(track => ({
         ...track,
         clips: track.clipIds.map(clipId => updatedClips.find(clip => clip.id === clipId)).filter(Boolean) as AudioClip[]
       }))
-      const newDuration = calculateProjectDuration(tracksWithClips)
-      
+      const newDuration     = calculateProjectDuration(tracksWithClips)
+
       return {
         ...state,
-        clips: updatedClips,
+        clips:   updatedClips,
         project: {
           ...state.project,
           duration: newDuration
         }
       }
     }
-    
     case 'UPDATE_CLIP_WAVEFORM':
       return {
         ...state,
         clips: state.clips.map(clip =>
-          clip.id === action.clipId 
+          clip.id === action.clipId
             ? { ...clip, waveformData: action.waveformData }
             : clip
         )
       }
-      
     case 'SET_DRAG_STATE':
       return {
         ...state,
@@ -280,18 +274,17 @@ function appReducer (state: AppState, action: AppAction): AppState {
           dragState: { ...state.ui.dragState, ...action.dragState }
         }
       }
-      
     case 'RESET_DRAG_STATE':
       return {
         ...state,
         ui: {
           ...state.ui,
           dragState: {
-            isDragging: false,
-            dragType: null,
-            hoveredTrackId: null,
+            isDragging:              false,
+            dragType:                null,
+            hoveredTrackId:          null,
             showNewTrackPlaceholder: false,
-            placeholderClip: null
+            placeholderClip:         null
           }
         }
       }
@@ -316,7 +309,7 @@ export interface AudioEngineContextValue {
   secondsToSamples: (seconds: number) => number
 
   // File handling
-  openFileDialog: () => void
+  openFileDialog:      () => void
   handleFilesSelected: (files: File[]) => void
 }
 
@@ -350,9 +343,9 @@ export function AudioEngineProvider ({ children }: AudioEngineProviderProps) {
   const fileInputRef    = useRef<HTMLInputElement>(null)
 
   // Playback state
-  const rafIdRef           = useRef<number | null>(null)
-  const startTimeRef       = useRef<number>(0)
-  const pausedAtSamplesRef = useRef<number>(0)
+  const rafIdRef             = useRef<number | null>(null)
+  const startTimeRef         = useRef<number>(0)
+  const pausedAtSamplesRef   = useRef<number>(0)
   const lastUpdateSamplesRef = useRef<number>(0)
 
   // Mouse listener for AudioContext initialization
@@ -369,7 +362,7 @@ export function AudioEngineProvider ({ children }: AudioEngineProviderProps) {
 
     try {
       audioContextRef.current = new AudioContext({
-        sampleRate:  48000,
+        sampleRate:  44100,
         latencyHint: 'interactive'
       })
 
@@ -502,7 +495,7 @@ export function AudioEngineProvider ({ children }: AudioEngineProviderProps) {
       return
 
     const audioContext = audioContextRef.current
-    
+
     // Use state.audioEngine.currentSamples as the source of truth
     const startFromSamples = state.audioEngine.currentSamples
     startTimeRef.current = audioContext.currentTime - samplesToSeconds(startFromSamples)
@@ -521,7 +514,7 @@ export function AudioEngineProvider ({ children }: AudioEngineProviderProps) {
       const trackClips = track.clipIds
         .map(clipId => state.clips.find(clip => clip.id === clipId))
         .filter(Boolean) as AudioClip[]
-        
+
       trackClips.forEach(clip => {
         scheduleClip(clip, trackNodes)
       })
@@ -536,7 +529,7 @@ export function AudioEngineProvider ({ children }: AudioEngineProviderProps) {
       const currentSamples   = secondsToSamples(Math.max(0, currentAudioTime))
 
       // Only update if the samples have actually changed to avoid unnecessary re-renders
-      if (Math.abs(currentSamples - lastUpdateSamplesRef.current) > 100) { // ~2ms threshold
+      if (Math.abs(currentSamples - lastUpdateSamplesRef.current) > 1000) { // ~20ms threshold
         lastUpdateSamplesRef.current = currentSamples
         dispatch({ type: 'SET_CURRENT_SAMPLES', samples: currentSamples })
       }
@@ -554,11 +547,12 @@ export function AudioEngineProvider ({ children }: AudioEngineProviderProps) {
           const trackNodes = trackNodesRef.current.get(track.id)
           if (!trackNodes)
             return
+
           // Get clips for this track
           const trackClips = track.clipIds
             .map(clipId => state.clips.find(clip => clip.id === clipId))
             .filter(Boolean) as AudioClip[]
-            
+
           trackClips.forEach(clip => {
             scheduleClip(clip, trackNodes)
           })
@@ -598,46 +592,43 @@ export function AudioEngineProvider ({ children }: AudioEngineProviderProps) {
 
   // Handle volume changes
   useEffect(() => {
-    if (mainGainNodeRef.current) {
+    if (mainGainNodeRef.current)
       mainGainNodeRef.current.gain.value = state.audioEngine.volume
-    }
-  }, [state.audioEngine.volume])
+  }, [ state.audioEngine.volume ])
 
   // Handle play/pause state changes with proper effect
   useEffect(() => {
     if (state.audioEngine.isInitialized) {
-      if (state.audioEngine.isPlaying) {
+      if (state.audioEngine.isPlaying)
         startPlayback()
-      } else {
+      else
         stopPlayback()
-      }
     }
-    
+
     // Cleanup on unmount
     return () => {
       stopPlayback()
     }
-  }, [state.audioEngine.isInitialized, state.audioEngine.isPlaying, startPlayback, stopPlayback])
+  }, [ state.audioEngine.isInitialized, state.audioEngine.isPlaying, startPlayback, stopPlayback ])
 
   // Handle seeking during playback - restart audio when currentSamples changes externally
   useEffect(() => {
     if (state.audioEngine.isPlaying && state.audioEngine.isInitialized) {
       // Check if currentSamples was changed externally (not from our animation frame)
       const samplesChanged = Math.abs(state.audioEngine.currentSamples - lastUpdateSamplesRef.current) > 1000 // ~20ms threshold
-      
+
       if (samplesChanged) {
         // User seeked during playback - restart from new position
         console.log('Seek detected during playback, restarting from:', samplesToSeconds(state.audioEngine.currentSamples))
         stopPlayback()
         // Small delay to let audio context stabilize
         setTimeout(() => {
-          if (state.audioEngine.isPlaying) {
+          if (state.audioEngine.isPlaying)
             startPlayback()
-          }
         }, 10)
       }
     }
-  }, [state.audioEngine.currentSamples, state.audioEngine.isPlaying, state.audioEngine.isInitialized, startPlayback, stopPlayback, samplesToSeconds])
+  }, [ state.audioEngine.currentSamples, state.audioEngine.isPlaying, state.audioEngine.isInitialized, startPlayback, stopPlayback, samplesToSeconds ])
 
   // Handle file selection
   const handleFilesSelected = useCallback((files: File[]) => {
@@ -707,22 +698,22 @@ export function AudioEngineProvider ({ children }: AudioEngineProviderProps) {
   ) => {
     dispatch({ type: 'UPDATE_PROCESSING_FILE', id, updates: { status: 'completed' }})
 
-    const clipId = generateId()
+    const clipId   = generateId()
     const clipName = sanitizeFileName(fileName.replace(/\.[^/.]+$/, ''))
 
     // Create the clip first
     const newClip: AudioClip = {
-      id: clipId,
-      name: clipName,
-      trackId: '', // Will be assigned when placed on track
+      id:           clipId,
+      name:         clipName,
+      trackId:      '', // Will be assigned when placed on track
       audioBuffer,
       waveformData: [],
-      startTime: 0,
+      startTime:    0,
       duration,
-      volume: 1,
-      pitch: 0,
-      color: getRandomTrackColor(),
-      isLoading: false
+      volume:       1,
+      pitch:        0,
+      color:        getRandomTrackColor(),
+      isLoading:    false
     }
 
     dispatch({ type: 'ADD_CLIP', clip: newClip })
@@ -735,32 +726,33 @@ export function AudioEngineProvider ({ children }: AudioEngineProviderProps) {
       // Assign to hovered track
       targetTrackId = dragState.hoveredTrackId
       dispatch({ type: 'ASSIGN_CLIP_TO_TRACK', clipId, trackId: targetTrackId })
-    } else {
+    }
+    else {
       // Create new track
-      const trackId = generateId()
+      const trackId  = generateId()
       const newTrack = {
-        id: trackId,
-        name: `Track ${state.project.tracks.length + 1}`,
-        color: newClip.color as TrackColor,
-        volume: 0.8,
-        pan: 0,
-        muted: false,
-        solo: false,
-        clipIds: [clipId],
-        index: state.project.tracks.length
+        id:      trackId,
+        name:    `Track ${state.project.tracks.length + 1}`,
+        color:   newClip.color as TrackColor,
+        volume:  0.8,
+        pan:     0,
+        muted:   false,
+        solo:    false,
+        clipIds: [ clipId ],
+        index:   state.project.tracks.length
       }
-      
+
       targetTrackId = trackId
       dispatch({ type: 'ADD_TRACK', track: newTrack })
     }
 
     // Update clip with assigned track
-    dispatch({ type: 'UPDATE_CLIP', clipId, updates: { trackId: targetTrackId } })
+    dispatch({ type: 'UPDATE_CLIP', clipId, updates: { trackId: targetTrackId }})
 
     // Request waveform generation
     audioDecoder.processMessage({
-      type: WorkerMessageType.GENERATE_WAVEFORM,
-      id: clipId,
+      type:    WorkerMessageType.GENERATE_WAVEFORM,
+      id:      clipId,
       audioBuffer,
       samples: Math.min(1000, Math.floor(duration * 100))
     })
