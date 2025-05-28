@@ -2,9 +2,9 @@
  * Demo App for the Audio Streams Module
  */
 
+import { AudioEngineProvider } from '../contexts/AudioEngineContext'
 import MainAudioView from '../components/MainAudioView'
 import '../styles/globals.css'
-import './App.css'
 
 
 function App () {
@@ -15,7 +15,9 @@ function App () {
     </header>
 
     <main className='app-main'>
-      <MainAudioView />
+      <AudioEngineProvider>
+        <MainAudioView />
+      </AudioEngineProvider>
     </main>
   </div>
 }

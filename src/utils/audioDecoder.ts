@@ -12,6 +12,7 @@ import {
   WaveformGeneratedMessage,
   DecodeErrorMessage
 } from '../types/audio'
+import { generateWaveformDataOffline } from './audioUtils'
 
 
 // Create offline audio context for decoding (doesn't require user gesture)
@@ -23,9 +24,7 @@ function createOfflineContext (): OfflineAudioContext {
 }
 
 
-// Generate waveform data from AudioBuffer
-
-
+// Generate waveform data from AudioBuffer (fallback method)
 function generateWaveformData (audioBuffer: AudioBuffer, targetSamples = 1000): number[] {
   const channelData                    = audioBuffer.getChannelData(0) // Use first channel
   const samplesPerPixel                = Math.floor(channelData.length / targetSamples)
@@ -117,7 +116,8 @@ export class AudioDecoder {
           const { id, audioBuffer, samples } = message as GenerateWaveformMessage
 
           try {
-            const waveformData = generateWaveformData(audioBuffer, samples)
+            // Use the new offline waveform generation method
+            const waveformData = await generateWaveformDataOffline(audioBuffer, samples)
 
             this.postMessage({
               type: WorkerMessageType.WAVEFORM_GENERATED,

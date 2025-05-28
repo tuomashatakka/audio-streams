@@ -3,7 +3,6 @@
  */
 
 import { useRef, useEffect, useCallback, useMemo } from 'react'
-import { TimelineConfig } from '../../types/audio'
 import { formatTime, timeToPixels, pixelsToTime } from '../../utils/audioUtils'
 import './Timeline.css'
 
@@ -131,7 +130,10 @@ function Timeline ({
     const time = pixelsToTime(x, pixelsPerSecond)
 
     isDragging.current = true
-    onScrub(Math.max(0, Math.min(time, duration)))
+    
+    // Immediate scrub on click
+    const clampedTime = Math.max(0, Math.min(time, duration))
+    onScrub(clampedTime)
 
     // Add global event listeners for dragging
     const handleMouseMove = (moveEvent: MouseEvent) => {
@@ -141,7 +143,8 @@ function Timeline ({
       const rect = containerRef.current.getBoundingClientRect()
       const x    = moveEvent.clientX - rect.left
       const time = pixelsToTime(x, pixelsPerSecond)
-      onScrub(Math.max(0, Math.min(time, duration)))
+      const clampedTime = Math.max(0, Math.min(time, duration))
+      onScrub(clampedTime)
     }
 
     const handleMouseUp = () => {
@@ -171,40 +174,41 @@ function Timeline ({
 
   // Calculate playhead position
   const playheadPosition = timeToPixels(currentTime, pixelsPerSecond)
-  const playheadStyle    = {
-    left:   `${playheadPosition}px`,
-    height: `${height}px`
-  }
 
-  const zoomOut   = useCallback(() => onZoomChange(pixelsPerSecond * 0.8), [ pixelsPerSecond ])
-  const zoomIn    = useCallback(() => onZoomChange(pixelsPerSecond * 1.125), [ pixelsPerSecond ])
-  const zoomLevel = useMemo(() => Math.round(pixelsPerSecond), [ pixelsPerSecond ])
+  const zoomOut = useCallback(() => onZoomChange(pixelsPerSecond * 0.8), [pixelsPerSecond])
+  const zoomIn = useCallback(() => onZoomChange(pixelsPerSecond * 1.125), [pixelsPerSecond])
+  const zoomLevel = useMemo(() => Math.round(pixelsPerSecond), [pixelsPerSecond])
 
-  return <div className='timeline-container' style={{ height }}>
-    <div
-      ref={containerRef}
-      className='timeline-canvas-container'
-      onMouseDown={handleMouseDown}
-      onWheel={handleWheel}
-      style={{ width }}>
+  return (
+    <div className={`timeline-container ${isDragging.current ? 'scrubbing' : ''}`} style={{ height }}>
+      <div
+        ref={containerRef}
+        className='timeline-canvas-container'
+        onMouseDown={handleMouseDown}
+        onWheel={handleWheel}
+        style={{ width }}
+      >
+        <canvas ref={canvasRef} className='timeline-canvas' />
 
-      <canvas
-        ref={canvasRef}
-        className='timeline-canvas' />
+        <div 
+          className='playhead' 
+          style={{
+            transform: `translateX(${playheadPosition}px)`,
+            height: `${height}px`
+          }}
+        >
+          <div className='playhead-handle' />
+          <div className='playhead-line' />
+        </div>
+      </div>
 
-      <div className='playhead' style={ playheadStyle }>
-        <div className='playhead-handle' />
-        <div className='playhead-line' />
-
+      <div className='timeline-controls'>
+        <button className='zoom-button' onClick={zoomOut} title='Zoom out'>-</button>
+        <span className='zoom-level'>{zoomLevel}px/s</span>
+        <button className='zoom-button' onClick={zoomIn} title='Zoom in'>+</button>
       </div>
     </div>
-
-    <div className='timeline-controls'>
-      <button className='zoom-button' onClick={ zoomOut } title='Zoom out'>-</button>
-      <span className='zoom-level'>{ zoomLevel }px/s</span>
-      <button className='zoom-button' onClick={ zoomIn } title='Zoom in'>+</button>
-    </div>
-  </div>
+  )
 }
 
 export default Timeline

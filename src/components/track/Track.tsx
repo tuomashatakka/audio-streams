@@ -20,6 +20,9 @@ interface TrackProps {
   onClipSelect:    (clipId: string) => void
   onClipMove:      (clipId: string, newStartTime: number) => void
   onClipResize:    (clipId: string, newDuration: number) => void
+  onTrackHover?:   (trackId: string | null) => void
+  isHovered?:      boolean
+  showPlaceholder?: boolean
 }
 
 
@@ -32,7 +35,10 @@ function Track ({
   onTrackUpdate,
   onClipSelect,
   onClipMove,
-  onClipResize
+  onClipResize,
+  onTrackHover,
+  isHovered = false,
+  showPlaceholder = false
 }: TrackProps) {
   // Handle volume change
   const handleVolumeChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
@@ -63,7 +69,26 @@ function Track ({
 
   const trackWidth = timeToPixels(projectDuration, pixelsPerSecond)
 
-  return <div className='audio-track' style={{ height: trackHeight }}>
+  // Handle track hover for drag and drop
+  const handleMouseEnter = useCallback(() => {
+    if (showPlaceholder) {
+      onTrackHover?.(track.id)
+    }
+  }, [showPlaceholder, onTrackHover, track.id])
+
+  const handleMouseLeave = useCallback(() => {
+    if (showPlaceholder) {
+      onTrackHover?.(null)
+    }
+  }, [showPlaceholder, onTrackHover])
+
+  return (
+    <div 
+      className={`audio-track ${isHovered ? 'hovered' : ''} ${showPlaceholder ? 'drag-target' : ''}`}
+      style={{ height: trackHeight }}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
     {/* Track header/controls */}
     <div className='track-header'>
       <input
@@ -133,33 +158,43 @@ function Track ({
       </div>
     </div>
 
-    {/* Track content area */}
-    <div className='track-content' style={{ width: trackWidth }}>
-      {/* Track background/lane */}
-      <div
-        className='track-lane'
-        style={{
-          width:      trackWidth,
-          height:     trackHeight - 40, // Subtract header height
-          borderLeft: `3px solid ${track.color}`
-        }}
-      />
-
-      {/* Audio clips */}
-      {track.clips.map(clip =>
-        <Clip
-          key={clip.id}
-          clip={clip}
-          pixelsPerSecond={pixelsPerSecond}
-          trackHeight={trackHeight - 40} // Subtract header height
-          isSelected={selectedClipId === clip.id}
-          onSelect={onClipSelect}
-          onMove={onClipMove}
-          onResize={onClipResize}
+      {/* Track content area */}
+      <div className='track-content' style={{ width: trackWidth }}>
+        {/* Track background/lane */}
+        <div
+          className='track-lane'
+          style={{
+            width: trackWidth,
+            height: trackHeight - 40, // Subtract header height
+            borderLeft: `3px solid ${track.color}`
+          }}
         />
-      )}
+
+        {/* Audio clips */}
+        {track.clips.map(clip => (
+          <Clip
+            key={clip.id}
+            clip={clip}
+            pixelsPerSecond={pixelsPerSecond}
+            trackHeight={trackHeight - 40} // Subtract header height
+            isSelected={selectedClipId === clip.id}
+            onSelect={onClipSelect}
+            onMove={onClipMove}
+            onResize={onClipResize}
+          />
+        ))}
+
+        {/* Placeholder when hovering during drag */}
+        {isHovered && showPlaceholder && (
+          <div className='clip-placeholder'>
+            <div className='placeholder-content'>
+              <span>Drop audio file here</span>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
-  </div>
+  )
 }
 
 export default Track

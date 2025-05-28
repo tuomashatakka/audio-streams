@@ -1,6 +1,7 @@
 .audio-clip {
   position: absolute;
   top: 4px;
+  left: 0; /* Use transform for horizontal positioning */
   border: 2px solid transparent;
   border-radius: 4px;
   cursor: grab;
@@ -9,6 +10,7 @@
   background: linear-gradient(135deg, var(--color, #3a86ff), var(--color, #3a86ff)dd);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   transition: all 0.2s ease;
+  will-change: transform; /* Optimize for transform animations */
 }
 
 .audio-clip:hover {

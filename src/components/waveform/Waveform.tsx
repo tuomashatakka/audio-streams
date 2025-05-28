@@ -1,8 +1,9 @@
 /**
- * Waveform visualization component using Canvas API
+ * Waveform visualization component using SVG
+ * Generates scalable vector graphics for better performance and quality
  */
 
-import { useRef, useEffect } from 'react'
+import { useMemo } from 'react'
 
 
 interface WaveformProps {
@@ -25,74 +26,127 @@ function Waveform ({
   strokeWidth = 1,
   className
 }: WaveformProps) {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
+  
+  // Generate SVG path from waveform data
+  const svgPath = useMemo(() => {
+    if (!waveformData.length) return ''
 
-  // Draw the waveform
-  useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas || !waveformData.length)
-      return
-
-    const ctx = canvas.getContext('2d')
-    if (!ctx)
-      return
-
-    // Set canvas size
-    canvas.width = width
-    canvas.height = height
-
-    // Clear canvas
-    ctx.fillStyle = backgroundColor
-    ctx.fillRect(0, 0, width, height)
-
-    // Draw waveform
-    ctx.strokeStyle = color
-    ctx.lineWidth = strokeWidth
-    ctx.lineCap = 'round'
-    ctx.lineJoin = 'round'
-
-    const centerY      = height / 2
+    const centerY = height / 2
     const maxAmplitude = height / 2 - 2 // Leave small margin
+    
+    // Generate path commands for top and bottom halves
+    const topPath: string[] = []
+    const bottomPath: string[] = []
 
-    ctx.beginPath()
-
-    // Draw the waveform as connected lines
     for (let i = 0; i < waveformData.length; i++) {
-      const x         = i / (waveformData.length - 1) * width
+      const x = (i / (waveformData.length - 1)) * width
       const amplitude = waveformData[i] * maxAmplitude
-
-      // Draw both positive and negative peaks
-      const y1 = centerY - amplitude
-      const y2 = centerY + amplitude
-
-      if (i === 0)
-        ctx.moveTo(x, y1)
-      else
-        ctx.lineTo(x, y1)
+      
+      const topY = centerY - amplitude
+      const bottomY = centerY + amplitude
+      
+      if (i === 0) {
+        topPath.push(`M ${x} ${topY}`)
+        bottomPath.push(`M ${x} ${bottomY}`)
+      } else {
+        topPath.push(`L ${x} ${topY}`)
+        bottomPath.push(`L ${x} ${bottomY}`)
+      }
     }
 
-    // Draw bottom half
-    for (let i = waveformData.length - 1; i >= 0; i--) {
-      const x         = i / (waveformData.length - 1) * width
+    // Create closed path for filled waveform
+    const pathCommands = [
+      ...topPath,
+      ...bottomPath.reverse(),
+      'Z'
+    ].join(' ')
+
+    return pathCommands
+  }, [waveformData, width, height])
+
+  // Generate stroke path (outline only)
+  const strokePath = useMemo(() => {
+    if (!waveformData.length) return ''
+
+    const centerY = height / 2
+    const maxAmplitude = height / 2 - 2
+    
+    const topPath: string[] = []
+    const bottomPath: string[] = []
+
+    for (let i = 0; i < waveformData.length; i++) {
+      const x = (i / (waveformData.length - 1)) * width
       const amplitude = waveformData[i] * maxAmplitude
-      const y2        = centerY + amplitude
-      ctx.lineTo(x, y2)
+      
+      const topY = centerY - amplitude
+      const bottomY = centerY + amplitude
+      
+      if (i === 0) {
+        topPath.push(`M ${x} ${topY}`)
+        bottomPath.push(`M ${x} ${bottomY}`)
+      } else {
+        topPath.push(`L ${x} ${topY}`)
+        bottomPath.push(`L ${x} ${bottomY}`)
+      }
     }
 
-    ctx.closePath()
-    ctx.fillStyle = color + '40' // Add some transparency
-    ctx.fill()
-    ctx.stroke()
-  }, [ waveformData, width, height, color, backgroundColor, strokeWidth ])
+    return [topPath.join(' '), bottomPath.join(' ')].join(' ')
+  }, [waveformData, width, height])
 
-  return <canvas
-    ref={canvasRef}
-    className={className}
-    style={{ display: 'block' }}
-    role='img'
-    aria-label='Audio waveform visualization'
-  />
+  if (!waveformData.length) {
+    return (
+      <svg
+        width={width}
+        height={height}
+        className={className}
+        role='img'
+        aria-label='Empty audio waveform'
+      >
+        <rect 
+          width={width} 
+          height={height} 
+          fill={backgroundColor} 
+        />
+      </svg>
+    )
+  }
+
+  return (
+    <svg
+      width={width}
+      height={height}
+      className={className}
+      role='img'
+      aria-label='Audio waveform visualization'
+      style={{ display: 'block' }}
+    >
+      {/* Background */}
+      {backgroundColor !== 'transparent' && (
+        <rect 
+          width={width} 
+          height={height} 
+          fill={backgroundColor} 
+        />
+      )}
+      
+      {/* Filled waveform */}
+      <path
+        d={svgPath}
+        fill={`${color}40`} // Add transparency
+        stroke='none'
+      />
+      
+      {/* Stroke outline */}
+      <path
+        d={strokePath}
+        fill='none'
+        stroke={color}
+        strokeWidth={strokeWidth}
+        strokeLinecap='round'
+        strokeLinejoin='round'
+      />
+    </svg>
+  )
 }
-
 
 export default Waveform

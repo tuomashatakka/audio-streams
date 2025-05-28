@@ -2,15 +2,16 @@
  * Drop Zone Component - handles drag and drop for audio files
  */
 
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback } from 'react'
 import { Upload, FileAudio, AlertCircle } from 'lucide-react'
 import { DropZoneState, FileProcessingState } from '../../types/audio'
 import { isSupportedAudioFile } from '../../utils/audioUtils'
+import { useAudioEngine } from '../../contexts/AudioEngineContext'
 import './DropZone.css'
 
 
 interface DropZoneProps {
-  onFilesDropped:  (files: File[]) => void
+  onFilesDropped?: (files: File[]) => void
   processingFiles: FileProcessingState[]
   isProcessing:    boolean
   className?:      string
@@ -18,16 +19,12 @@ interface DropZoneProps {
 
 
 function DropZone ({
-  onFilesDropped,
   processingFiles,
   isProcessing,
   className
 }: DropZoneProps) {
-  const fileInputRef                        = useRef<HTMLInputElement>(null)
-  const [ dropZoneState, setDropZoneState ] = useState<DropZoneState>({
-    isDragOver:   false,
-    isProcessing: false
-  })
+  const { openFileDialog }                  = useAudioEngine()
+  const [ dropZoneState, setDropZoneState ] = useState<DropZoneState>({ isDragOver: false })
 
   // Handle drag events
   const handleDragOver = useCallback((event: React.DragEvent) => {
@@ -35,7 +32,7 @@ function DropZone ({
     event.stopPropagation()
 
     if (!dropZoneState.isDragOver)
-      setDropZoneState(prev => ({ ...prev, isDragOver: true }))
+      setDropZoneState((prev: DropZoneState) => ({ ...prev, isDragOver: true }))
   }, [ dropZoneState.isDragOver ])
 
   const handleDragLeave = useCallback((event: React.DragEvent) => {
@@ -44,60 +41,47 @@ function DropZone ({
 
     // Only set isDragOver to false if we're leaving the drop zone itself
     if (!event.currentTarget.contains(event.relatedTarget as Node))
-      setDropZoneState(prev => ({ ...prev, isDragOver: false }))
+      setDropZoneState((prev: DropZoneState) => ({ ...prev, isDragOver: false }))
   }, [])
 
   const handleDrop = useCallback((event: React.DragEvent) => {
     event.preventDefault()
     event.stopPropagation()
 
-    setDropZoneState(prev => ({ ...prev, isDragOver: false }))
+    setDropZoneState((prev: DropZoneState) => ({ ...prev, isDragOver: false }))
 
     const files      = Array.from(event.dataTransfer.files)
     const audioFiles = files.filter(isSupportedAudioFile)
 
+    console.log(audioFiles)
+
     if (audioFiles.length === 0) {
-      setDropZoneState(prev => ({
+      setDropZoneState((prev: DropZoneState) => ({
         ...prev,
         errorMessage: 'No supported audio files found. Please drop WAV, MP3, M4A, OGG, or FLAC files.'
       }))
       setTimeout(() => {
-        setDropZoneState(prev => ({ ...prev, errorMessage: undefined }))
+        setDropZoneState((prev: DropZoneState) => ({ ...prev, errorMessage: undefined }))
       }, 3000)
       return
     }
 
     if (audioFiles.length !== files.length) {
-      setDropZoneState(prev => ({
+      setDropZoneState((prev: DropZoneState) => ({
         ...prev,
         errorMessage: `${files.length - audioFiles.length} unsupported file(s) ignored.`
       }))
       setTimeout(() => {
-        setDropZoneState(prev => ({ ...prev, errorMessage: undefined }))
+        setDropZoneState((prev: DropZoneState) => ({ ...prev, errorMessage: undefined }))
       }, 3000)
     }
-
-    onFilesDropped(audioFiles)
-  }, [ onFilesDropped ])
-
-  // Handle file input change
-  const handleFileInputChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    const files      = Array.from(event.target.files || [])
-    const audioFiles = files.filter(isSupportedAudioFile)
-
-    if (audioFiles.length > 0)
-      onFilesDropped(audioFiles)
-
-    // Reset file input
-    if (fileInputRef.current)
-      fileInputRef.current.value = ''
-  }, [ onFilesDropped ])
+  }, [])
 
   // Handle click to open file dialog
   const handleClick = useCallback(() => {
     if (!isProcessing)
-      fileInputRef.current?.click()
-  }, [ isProcessing ])
+      openFileDialog()
+  }, [ isProcessing, openFileDialog ])
 
   const dropZoneClasses = [
     'drop-zone',
@@ -115,16 +99,7 @@ function DropZone ({
     onClick={handleClick}
     role='button'
     tabIndex={0}
-    aria-label='Drop audio files here or click to select'
-  >
-    <input
-      ref={fileInputRef}
-      type='file'
-      multiple
-      accept='.wav,.mp3,.m4a,.mp4,.ogg,.flac,audio/*'
-      onChange={handleFileInputChange}
-      className='file-input'
-    />
+    aria-label='Drop audio files here or click to select'>
 
     {/* Main drop zone content */}
     {!isProcessing && processingFiles.length === 0 &&
@@ -175,10 +150,10 @@ function DropZone ({
 
     {/* Error message */}
     {dropZoneState.errorMessage &&
-        <div className='error-message'>
-          <AlertCircle size={20} />
-          <span>{dropZoneState.errorMessage}</span>
-        </div>
+      <div className='error-message'>
+        <AlertCircle size={20} />
+        <span>{dropZoneState.errorMessage}</span>
+      </div>
     }
   </div>
 }

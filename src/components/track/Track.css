@@ -184,6 +184,43 @@
   }
 }
 
+/* Drag and drop styles */
+.audio-track.hovered {
+  background-color: rgba(255, 85, 0, 0.1);
+  border-color: #ff5500;
+}
+
+.audio-track.drag-target {
+  transition: all 0.2s ease;
+}
+
+.clip-placeholder {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border: 2px dashed #ff5500;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(255, 85, 0, 0.1);
+  z-index: 10;
+  animation: pulse 2s infinite;
+}
+
+.clip-placeholder .placeholder-content {
+  color: #ff5500;
+  font-weight: 500;
+  font-size: 12px;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
 @media (max-width: 768px) {
   .track-header {
     flex-direction: column;

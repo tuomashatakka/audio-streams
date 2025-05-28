@@ -8,8 +8,6 @@
 // Main Components
 export { default as MainAudioView } from './components/MainAudioView'
 
-export { default as AudioEngine } from './components/audio-engine/AudioEngine'
-
 export { default as Timeline } from './components/timeline/Timeline'
 
 export { default as Track } from './components/track/Track'
@@ -22,8 +20,10 @@ export { default as PlaybackControls } from './components/playback-controls/Play
 
 export { default as DropZone } from './components/drop-zone/DropZone'
 
-// Types
+// Context
+export { AudioEngineProvider, useAudioEngine } from './contexts/AudioEngineContext'
 
+// Types
 export type {
   AudioTrack,
   AudioClip,

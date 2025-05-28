@@ -15,36 +15,68 @@
   overflow: hidden;
 }
 
-/* Empty workspace (when no tracks) */
-.empty-workspace {
+/* Tracks area - now takes up all available space and handles horizontal scrolling */
+.tracks-area {
+  flex: 1;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-x: auto;
+  overflow-y: hidden;
+  background-color: #1a1a1a;
+}
+
+/* Tracks container - handles vertical scrolling */
+.tracks-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overflow-x: visible; /* Let the parent handle horizontal scrolling */
+  background-color: #1a1a1a;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  min-height: 200px; /* Ensure minimum height even when empty */
+}
+
+/* Empty tracks message */
+.empty-tracks-message {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 40px;
+  color: var(--text-tertiary);
+  font-size: var(--text-lg);
+  padding: var(--space-8);
+  text-align: center;
 }
 
-/* Tracks area */
-.tracks-area {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-/* Tracks container */
-.tracks-container {
-  flex: 1;
-  overflow-x: auto;
-  overflow-y: auto;
-  background-color: #1a1a1a;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-/* Custom scrollbar for tracks container */
-.tracks-container::-webkit-scrollbar {
+/* Custom scrollbar for tracks area (horizontal) */
+.tracks-area::-webkit-scrollbar {
   width: 12px;
   height: 12px;
+}
+
+.tracks-area::-webkit-scrollbar-track {
+  background: #2a2a2a;
+}
+
+.tracks-area::-webkit-scrollbar-thumb {
+  background: #666666;
+  border-radius: 6px;
+}
+
+.tracks-area::-webkit-scrollbar-thumb:hover {
+  background: #888888;
+}
+
+.tracks-area::-webkit-scrollbar-corner {
+  background: #2a2a2a;
+}
+
+/* Custom scrollbar for tracks container (vertical only) */
+.tracks-container::-webkit-scrollbar {
+  width: 12px;
+  height: 0px; /* Hide horizontal scrollbar */
 }
 
 .tracks-container::-webkit-scrollbar-track {
@@ -60,65 +92,10 @@
   background: #888888;
 }
 
-.tracks-container::-webkit-scrollbar-corner {
-  background: #2a2a2a;
-}
-
-/* Floating drop zone */
-.floating-drop-zone {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  z-index: 1000;
-  opacity: 0.9;
-  transition: opacity 0.3s ease;
-}
-
-.floating-drop-zone:hover {
-  opacity: 1;
-}
-
-.floating-drop-zone .drop-zone.compact {
-  min-height: 80px;
-  padding: 16px;
-  border-radius: 50px;
-  background-color: rgba(42, 42, 42, 0.95);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-}
-
-.floating-drop-zone .drop-zone.compact .drop-zone-content {
-  flex-direction: row;
-  gap: 8px;
-}
-
-.floating-drop-zone .drop-zone.compact .drop-zone-icon {
-  margin: 0;
-}
-
-.floating-drop-zone .drop-zone.compact .drop-zone-icon svg {
-  width: 20px;
-  height: 20px;
-}
-
-.floating-drop-zone .drop-zone.compact .drop-zone-text h3 {
-  font-size: 12px;
-  margin: 0;
-}
-
-.floating-drop-zone .drop-zone.compact .drop-zone-text p {
-  display: none;
-}
-
 /* Responsive design */
 @media (max-width: 1024px) {
   .tracks-container {
     overflow-x: scroll;
-  }
-  
-  .floating-drop-zone {
-    bottom: 80px; /* Account for mobile controls */
   }
 }
 
@@ -126,40 +103,16 @@
   .main-audio-view {
     height: 100dvh; /* Use dynamic viewport height on mobile */
   }
-  
-  .empty-workspace {
-    padding: 20px;
-  }
-  
-  .floating-drop-zone {
-    position: static;
-    margin: 16px;
-    opacity: 1;
-  }
-  
-  .floating-drop-zone .drop-zone.compact {
-    border-radius: 8px;
-    min-height: 60px;
-    padding: 12px;
+
+  .empty-tracks-message {
+    padding: var(--space-6);
   }
 }
 
 @media (max-width: 480px) {
-  .empty-workspace {
-    padding: 16px;
-  }
-  
-  .floating-drop-zone {
-    margin: 12px;
-  }
-  
-  .floating-drop-zone .drop-zone.compact {
-    min-height: 50px;
-    padding: 8px;
-  }
-  
-  .floating-drop-zone .drop-zone.compact .drop-zone-text h3 {
-    font-size: 11px;
+  .empty-tracks-message {
+    padding: var(--space-4);
+    font-size: var(--text-base);
   }
 }
 
@@ -185,57 +138,65 @@
   transition: all 0.3s ease;
 }
 
-.empty-workspace {
-  transition: all 0.3s ease;
-}
-
-/* Focus management for accessibility */
-.main-audio-view:focus-within .floating-drop-zone {
-  opacity: 1;
-}
-
 /* High contrast mode support */
 @media (prefers-contrast: high) {
   .main-audio-view {
     background-color: #000000;
     border: 1px solid #ffffff;
   }
-  
+
   .tracks-container {
     background-color: #000000;
     border-top: 2px solid #ffffff;
-  }
-  
-  .floating-drop-zone .drop-zone.compact {
-    background-color: #000000;
-    border: 2px solid #ffffff;
   }
 }
 
 /* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
-  .floating-drop-zone,
-  .tracks-area,
-  .empty-workspace {
+  .tracks-area {
     transition: none;
   }
-  
-  .floating-drop-zone .drop-zone.compact {
-    backdrop-filter: none;
-  }
+}
+
+/* Drag and drop styles */
+.tracks-area.drag-over {
+  background-color: rgba(255, 85, 0, 0.1);
+}
+
+.new-track-placeholder {
+  height: 64px;
+  margin: var(--space-2) 0;
+  border: 2px dashed var(--accent-primary);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(255, 85, 0, 0.1);
+  animation: pulse 2s infinite;
+}
+
+.new-track-placeholder .placeholder-content {
+  color: var(--accent-primary);
+  font-weight: 500;
+  font-size: var(--text-sm);
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
 }
 
 /* Print styles (hide interactive elements) */
 @media print {
-  .floating-drop-zone {
+  .new-track-placeholder {
     display: none;
   }
-  
+
   .main-audio-view {
     height: auto;
     overflow: visible;
   }
-  
+
   .tracks-container {
     overflow: visible;
   }

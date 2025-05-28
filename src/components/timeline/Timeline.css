@@ -4,12 +4,16 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   overflow: hidden;
   user-select: none;
+  width: 100%;
+  min-width: 100%;
 }
 
 .timeline-canvas-container {
   position: relative;
   cursor: pointer;
   height: 100%;
+  width: 100%;
+  min-width: 100%;
 }
 
 .timeline-canvas {
@@ -21,9 +25,11 @@
 .playhead {
   position: absolute;
   top: 0;
+  left: 0; /* Use transform for positioning */
   width: 2px;
   pointer-events: none;
   z-index: 1000;
+  will-change: transform; /* Optimize for transform animations */
 }
 
 .playhead-handle {

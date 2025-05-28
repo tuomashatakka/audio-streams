@@ -6,7 +6,7 @@ import { SupportedAudioFormat, TRACK_COLORS, TrackColor, AudioTrack } from '../t
 
 
 export function isSupportedAudioFile (file: File): boolean {
-  return Object.values(SupportedAudioFormat).includes(file.type as SupportedAudioFormat)
+  return file.type.startsWith('audio/') || Object.values(SupportedAudioFormat).includes(file.type as SupportedAudioFormat)
 }
 
 
@@ -209,4 +209,41 @@ export function calculateProjectDuration (tracks: AudioTrack[]): number {
   )
 
   return Math.max(maxDuration, 16) // Ensure minimum duration
+}
+
+/**
+ * Generate waveform data using OfflineAudioContext for better accuracy
+ */
+export async function generateWaveformDataOffline (audioBuffer: AudioBuffer, samples: number = 1000): Promise<number[]> {
+  try {
+    // Create offline context with same sample rate as source
+    const offlineContext = new OfflineAudioContext(1 /* mono output */, audioBuffer.length, audioBuffer.sampleRate)
+
+    // Create source node
+    const source = offlineContext.createBufferSource()
+    source.buffer = audioBuffer
+
+    // Connect to destination
+    source.connect(offlineContext.destination)
+    source.start(0)
+
+    // Render the audio
+    const renderedBuffer = await offlineContext.startRendering()
+
+    // Calculate peaks from rendered buffer
+    return calculateWaveformPeaks(renderedBuffer, samples, 0)
+  }
+  catch (error) {
+    console.error('Failed to generate waveform data offline:', error)
+    // Fallback to direct calculation
+    return calculateWaveformPeaks(audioBuffer, samples, 0)
+  }
+}
+
+export function samplesToSeconds (samples: number, sampleRate: number): number {
+  return samples / sampleRate
+}
+
+export function secondsToSamples (seconds: number, sampleRate: number): number {
+  return seconds * sampleRate
 }
