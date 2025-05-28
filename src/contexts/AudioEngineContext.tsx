@@ -713,8 +713,8 @@ export function AudioEngineProvider ({ children }: AudioEngineProviderProps) {
   }, [ state.audioEngine.currentSamples, state.audioEngine.isPlaying, state.audioEngine.isInitialized, startPlayback, stopPlayback, samplesToSeconds ])
 
   // Handle file selection
-  const handleFilesSelected = useCallback((files: File[]) => {
-    const audioFiles = files.filter(isSupportedAudioFile)
+  const handleFilesSelected = (files: File[], trackId = '') => {
+    const audioFiles = [ ...files ].filter(isSupportedAudioFile)
     if (audioFiles.length === 0)
       return
 
@@ -735,7 +735,7 @@ export function AudioEngineProvider ({ children }: AudioEngineProviderProps) {
       switch (message.type) {
         case WorkerMessageType.AUDIO_DECODED: {
           if (message.audioBuffer && message.fileName && message.duration)
-            handleAudioDecoded(message.id, message.audioBuffer, message.fileName, message.duration)
+            handleAudioDecoded(message.id, message.audioBuffer, message.fileName, message.duration, message.trackId)
           break
         }
         case WorkerMessageType.DECODE_ERROR: {
@@ -765,18 +765,20 @@ export function AudioEngineProvider ({ children }: AudioEngineProviderProps) {
             type:     WorkerMessageType.DECODE_AUDIO,
             id:       fileId,
             arrayBuffer,
-            fileName: file.name
+            fileName: file.name,
+            trackId
           })
       }
       reader.readAsArrayBuffer(file)
     })
-  }, [])
+  }
 
   const handleAudioDecoded = useCallback((
     id: string,
     audioBuffer: AudioBuffer,
     fileName: string,
-    duration: number
+    duration: number,
+    trackId: string,
   ) => {
     dispatch({ type: 'UPDATE_PROCESSING_FILE', id, updates: { status: 'completed' }})
 
@@ -802,18 +804,15 @@ export function AudioEngineProvider ({ children }: AudioEngineProviderProps) {
 
     // Determine track assignment based on drag state
     const dragState = state.ui.dragState
-    let targetTrackId = ''
+    let targetTrackId = trackId || dragState.hoveredTrackId || ''
 
-    if (dragState.hoveredTrackId) {
-      // Assign to hovered track
-      targetTrackId = dragState.hoveredTrackId
+    if (targetTrackId)
       dispatch({ type: 'ASSIGN_CLIP_TO_TRACK', clipId, trackId: targetTrackId })
-    }
     else {
-      // Create new track
-      const trackId  = generateId()
+      targetTrackId = generateId()
+
       const newTrack = {
-        id:      trackId,
+        id:      targetTrackId,
         name:    `Track ${state.project.tracks.length + 1}`,
         color:   newClip.color as TrackColor,
         volume:  0.8,
@@ -823,8 +822,6 @@ export function AudioEngineProvider ({ children }: AudioEngineProviderProps) {
         clipIds: [ clipId ],
         index:   state.project.tracks.length
       }
-
-      targetTrackId = trackId
       dispatch({ type: 'ADD_TRACK', track: newTrack })
     }
 

@@ -23,7 +23,7 @@ interface TrackProps {
   onClipResize:       (clipId: string, newDuration: number) => void
   onClipMoveToTrack?: (clipId: string, targetTrackId: string, newStartTime: number) => void
   onTrackRemove?:     (trackId: string) => void
-  onFileUpload?:      (trackId: string, files: FileList) => void
+  onFileUpload?:      (files: FileList, trackId: string) => void
   onTrackHover?:      (trackId: string | null) => void
   isHovered?:         boolean
   showPlaceholder?:   boolean
@@ -83,13 +83,13 @@ function Track ({
   }, [ track.id, track.name, onTrackRemove ])
 
   // Handle file upload
-  const handleFileUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files
     if (files && onFileUpload) {
-      onFileUpload(track.id, files)
+      onFileUpload(files, track.id)
       event.target.value = '' // Reset input
     }
-  }, [ track.id, onFileUpload ])
+  }
 
   const trackWidth = timeToPixels(projectDuration, pixelsPerSecond)
 
@@ -218,7 +218,6 @@ function Track ({
         <div className='empty-track-upload'>
           <label className='upload-button btn-primary' htmlFor={`file-upload-${track.id}`}>
             <Upload size={16} />
-            Upload Audio
           </label>
 
           <input

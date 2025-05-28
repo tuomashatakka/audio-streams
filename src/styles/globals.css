@@ -622,3 +622,19 @@
   display: block;
   margin-left: 20px;
 }
+
+
+.timeline-container {
+  width: unset;
+  max-width: none;
+  overflow: auto;
+  position: relative;
+  overflow: unset;
+}
+.timeline-svg {
+  left: 0;
+  position: relative;
+  top: 0;
+  right: unset;
+  width: unset !important;
+}

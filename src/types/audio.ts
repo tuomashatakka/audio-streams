@@ -91,6 +91,7 @@ export interface WorkerMessage {
   type:          WorkerMessageType
   id:            string
   arrayBuffer?:  ArrayBuffer
+  trackId?:      string
   fileName?:     string
   audioBuffer?:  AudioBuffer
   duration?:     number
