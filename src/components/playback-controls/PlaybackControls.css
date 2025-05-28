@@ -22,52 +22,72 @@
   justify-content: center;
   width: 40px;
   height: 40px;
-  background-color: rgba(255, 255, 255, 0.1);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
   border: none;
   border-radius: 50%;
   color: #ffffff;
   cursor: pointer;
   transition: all 0.2s ease;
+  box-shadow: var(--shadow-sm);
 }
 
 .transport-button:hover {
-  background-color: rgba(255, 255, 255, 0.2);
-  transform: scale(1.05);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
+  transform: scale(1.05) translateY(-1px);
+  box-shadow: var(--shadow-md);
 }
 
 .transport-button:active {
   transform: scale(0.95);
+  box-shadow: var(--shadow-xs);
 }
 
 .transport-button.play-pause {
-  background-color: #ff5500;
+  background: linear-gradient(135deg, var(--gradient-primary-start), var(--gradient-primary-mid), var(--gradient-primary-end));
   width: 48px;
   height: 48px;
+  color: var(--text-inverse);
+  box-shadow: var(--shadow-md);
 }
 
 .transport-button.play-pause:hover {
-  background-color: #ff7733;
+  filter: brightness(1.1);
+  transform: scale(1.05) translateY(-2px);
+  box-shadow: var(--shadow-lg);
 }
 
 .transport-button.play-pause.playing {
-  background-color: #ff006e;
+  background: linear-gradient(135deg, #ff9bb3, #ff6b8a, #ff3d61);
+  animation: pulse-playing 2s infinite;
 }
 
 .transport-button.play-pause.playing:hover {
-  background-color: rgba(255, 0, 110, 0.8);
+  filter: brightness(1.1);
 }
 
 .transport-button.stop:hover {
-  background-color: rgba(255, 0, 110, 0.2);
+  background: linear-gradient(135deg, rgba(255, 0, 110, 0.3), rgba(255, 0, 110, 0.1));
 }
 
 .transport-button.loop.active {
-  background-color: #38b000;
+  background: linear-gradient(135deg, #6dd47e, #4ecf5e, #38c93a);
   color: white;
+  box-shadow: var(--shadow-md);
 }
 
 .transport-button.loop.active:hover {
-  background-color: rgba(56, 176, 0, 0.8);
+  filter: brightness(1.1);
+  transform: scale(1.05) translateY(-1px);
+  box-shadow: var(--shadow-lg);
+}
+
+@keyframes pulse-playing {
+  0%, 100% { 
+    box-shadow: var(--shadow-md), 0 0 0 0 rgba(255, 155, 179, 0.4);
+  }
+  50% { 
+    box-shadow: var(--shadow-lg), 0 0 0 8px rgba(255, 155, 179, 0);
+  }
 }
 
 /* Time display */

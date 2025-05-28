@@ -68,12 +68,34 @@
 .empty-tracks-message {
   flex: 1;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   color: var(--text-tertiary);
   font-size: var(--text-lg);
   padding: var(--space-8);
   text-align: center;
+  gap: var(--space-4);
+}
+
+.empty-tracks-subtitle {
+  color: var(--text-tertiary);
+  font-size: var(--text-base);
+  opacity: 0.8;
+  margin: 0;
+}
+
+.add-track-button-empty {
+  min-width: 140px;
+  height: 48px;
+  font-size: var(--text-base);
+  transition: var(--transition-base);
+  margin-top: var(--space-2);
+}
+
+.add-track-button-empty:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
 }
 
 /* Custom scrollbar for tracks area (horizontal) */
@@ -210,6 +232,27 @@
 @keyframes pulse {
   0%, 100% { opacity: 0.6; }
   50% { opacity: 1; }
+}
+
+/* Add Track Button Container */
+.add-track-container {
+  padding: var(--space-4);
+  display: flex;
+  justify-content: center;
+  border-top: 1px solid var(--border-primary);
+  background-color: var(--bg-secondary);
+}
+
+.add-track-button {
+  min-width: 120px;
+  height: 40px;
+  font-size: var(--text-sm);
+  transition: var(--transition-base);
+}
+
+.add-track-button:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
 }
 
 /* Print styles (hide interactive elements) */

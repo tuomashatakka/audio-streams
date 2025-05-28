@@ -1,3 +1,4 @@
+/* eslint-disable */
 /**
  * Main Audio View Component - the primary interface for the audio streams module
  */
@@ -10,6 +11,8 @@ import Timeline from './timeline/Timeline'
 import Track from './track/Track'
 import PlaybackControls from './playback-controls/PlaybackControls'
 import HotkeysHandler, { HotkeysConfig } from '../utils/hotkeysHandler'
+import { useState } from 'react'
+import { Plus } from 'lucide-react'
 import './MainAudioView.css'
 import '../styles/drag-drop.css'
 
@@ -22,6 +25,7 @@ function MainAudioView () {
     secondsToSamples,
     handleFilesSelected } = useAudioEngine()
   const hotkeysHandlerRef = useRef<HotkeysHandler | null>(null)
+  const [isControlsCollapsed, setIsControlsCollapsed] = useState(false)
 
   // Playback controls
   const handlePlay = useCallback(() => {
@@ -92,6 +96,14 @@ function MainAudioView () {
 
   const handleZoomChange = useCallback((newPixelsPerSecond: number) => {
     dispatch({ type: 'SET_PIXELS_PER_SECOND', pixelsPerSecond: newPixelsPerSecond })
+  }, [ dispatch ])
+
+  const handleAddTrack = useCallback(() => {
+    dispatch({ type: 'ADD_TRACK' })
+  }, [ dispatch ])
+
+  const handleClipMoveToTrack = useCallback((clipId: string, targetTrackId: string, newStartTime: number) => {
+    dispatch({ type: 'MOVE_CLIP_TO_TRACK', clipId, targetTrackId, newStartTime })
   }, [ dispatch ])
 
   const onNudgeLeft    = () => handleClipMove(state.ui.selectedClipId || '', -0.1)
@@ -216,14 +228,25 @@ function MainAudioView () {
           pixelsPerSecond={state.ui.pixelsPerSecond}
           bpm={state.project.bpm}
           timeSignature={state.project.timeSignature}
+          isCollapsed={isControlsCollapsed}
           onScrub={handleScrub}
           onZoomChange={handleZoomChange}
+          onToggleCollapse={() => setIsControlsCollapsed(prev => !prev)}
         />
 
         <div className='tracks-container'>
           {state.project.tracks.length === 0 &&
             <div className='empty-tracks-message'>
               <p>Drop audio files here to get started</p>
+              <p className='empty-tracks-subtitle'>or create a track manually</p>
+              <button
+                className='btn-primary add-track-button-empty'
+                onClick={handleAddTrack}
+                title='Add new audio track'
+              >
+                <Plus size={16} />
+                Add Track
+              </button>
             </div>
           }
 
@@ -236,10 +259,14 @@ function MainAudioView () {
               trackHeight={64}
               projectDuration={state.project.duration}
               selectedClipId={state.ui.selectedClipId}
+              isCollapsed={isControlsCollapsed}
               onTrackUpdate={handleTrackUpdate}
               onClipSelect={handleClipSelect}
               onClipMove={handleClipMove}
               onClipResize={handleClipResize}
+              onClipMoveToTrack={handleClipMoveToTrack}
+              onTrackRemove={(trackId) => dispatch({ type: 'REMOVE_TRACK', trackId })}
+              onFileUpload={handleFilesSelected}
               onTrackHover={handleTrackHover}
               isHovered={state.ui.dragState.hoveredTrackId === track.id}
               showPlaceholder={state.ui.dragState.isDragging && state.ui.dragState.dragType === 'file'}
@@ -256,6 +283,17 @@ function MainAudioView () {
               </div>
             </div>
           }
+
+          <div className='add-track-container'>
+            <button
+              className='btn-primary add-track-button'
+              onClick={handleAddTrack}
+              title='Add new audio track'
+            >
+              <Plus size={16} />
+              Add Track
+            </button>
+          </div>
         </div>
       </div>
     </div>

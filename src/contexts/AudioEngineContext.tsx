@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 /**
  * AudioEngine Context - Global audio state and engine management
  * Centralizes ALL application state using useReducer pattern
@@ -71,13 +72,15 @@ type AppAction =
   | { type: 'UPDATE_PROCESSING_FILE'; id: string; updates: Partial<FileProcessingState> }
   | { type: 'REMOVE_PROCESSING_FILE'; id: string }
   | { type: 'ADD_CLIP'; clip: AudioClip }
-  | { type: 'ADD_TRACK'; track: Omit<AudioTrack, 'clips'> & { clipIds: string[] }}
+  | { type: 'ADD_TRACK'; track?: Omit<AudioTrack, 'clips'> & { clipIds: string[] }}
   | { type: 'ASSIGN_CLIP_TO_TRACK'; clipId: string; trackId: string }
   | { type: 'UPDATE_TRACK'; trackId: string; updates: Partial<Omit<AudioTrack, 'clips'>> }
   | { type: 'UPDATE_CLIP'; clipId: string; updates: Partial<AudioClip> }
   | { type: 'UPDATE_CLIP_WAVEFORM'; clipId: string; waveformData: number[] }
   | { type: 'SET_DRAG_STATE'; dragState: Partial<AppState['ui']['dragState']> }
   | { type: 'RESET_DRAG_STATE' }
+  | { type: 'REMOVE_TRACK'; trackId: string }
+  | { type: 'MOVE_CLIP_TO_TRACK'; clipId: string; targetTrackId: string; newStartTime: number }
 
 // Initial state
 const initialState: AppState = {
@@ -186,7 +189,20 @@ function appReducer (state: AppState, action: AppAction): AppState {
         clips: [ ...state.clips, action.clip ]
       }
     case 'ADD_TRACK': {
-      const updatedTracks   = [ ...state.project.tracks, action.track ]
+      // Create new track if not provided
+      const newTrack = action.track || {
+        id:      generateId(),
+        name:    `Track ${state.project.tracks.length + 1}`,
+        color:   getRandomTrackColor(),
+        volume:  0.8,
+        pan:     0,
+        muted:   false,
+        solo:    false,
+        clipIds: [],
+        index:   state.project.tracks.length
+      }
+
+      const updatedTracks   = [ ...state.project.tracks, newTrack ]
       const tracksWithClips = updatedTracks.map(track => ({
         ...track,
         clips: track.clipIds.map(clipId => state.clips.find(clip => clip.id === clipId)).filter(Boolean) as AudioClip[]
@@ -288,6 +304,72 @@ function appReducer (state: AppState, action: AppAction): AppState {
           }
         }
       }
+    case 'REMOVE_TRACK': {
+      // Remove the track and its clips
+      const trackToRemove = state.project.tracks.find(track => track.id === action.trackId)
+      if (!trackToRemove)
+        return state
+
+      const updatedTracks = state.project.tracks.filter(track => track.id !== action.trackId)
+      const updatedClips = state.clips.filter(clip => !trackToRemove.clipIds.includes(clip.id))
+
+      // Recalculate duration
+      const tracksWithClips = updatedTracks.map(track => ({
+        ...track,
+        clips: track.clipIds.map(clipId => updatedClips.find(clip => clip.id === clipId)).filter(Boolean) as AudioClip[]
+      }))
+      const newDuration = calculateProjectDuration(tracksWithClips)
+
+      return {
+        ...state,
+        clips:   updatedClips,
+        project: {
+          ...state.project,
+          tracks:   updatedTracks,
+          duration: newDuration
+        }
+      }
+    }
+    case 'MOVE_CLIP_TO_TRACK': {
+      // Remove clip from current track and add to target track
+      const updatedTracks = state.project.tracks.map(track => {
+        if (track.clipIds.includes(action.clipId))
+          return {
+            ...track,
+            clipIds: track.clipIds.filter(clipId => clipId !== action.clipId)
+          }
+        if (track.id === action.targetTrackId)
+          return {
+            ...track,
+            clipIds: [ ...track.clipIds, action.clipId ]
+          }
+        return track
+      })
+
+      // Update clip with new track and start time
+      const updatedClips = state.clips.map(clip =>
+        clip.id === action.clipId
+          ? { ...clip, trackId: action.targetTrackId, startTime: action.newStartTime }
+          : clip
+      )
+
+      // Recalculate duration
+      const tracksWithClips = updatedTracks.map(track => ({
+        ...track,
+        clips: track.clipIds.map(clipId => updatedClips.find(clip => clip.id === clipId)).filter(Boolean) as AudioClip[]
+      }))
+      const newDuration = calculateProjectDuration(tracksWithClips)
+
+      return {
+        ...state,
+        clips:   updatedClips,
+        project: {
+          ...state.project,
+          tracks:   updatedTracks,
+          duration: newDuration
+        }
+      }
+    }
     default:
       return state
   }

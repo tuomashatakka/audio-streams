@@ -15,6 +15,21 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   min-height: 40px;
   gap: 12px;
+  transition: all var(--duration-normal) var(--ease-out);
+  overflow: hidden;
+  position: relative;
+}
+
+.track-header.collapsed {
+  max-width: 20px;
+  padding: 8px 2px;
+  gap: 0;
+}
+
+.track-header.collapsed .track-name-input,
+.track-header.collapsed .track-controls {
+  opacity: 0;
+  pointer-events: none;
 }
 
 .track-name-input {
@@ -72,6 +87,19 @@
 .solo-button.active {
   background-color: #ffbe0b;
   color: #121212;
+}
+
+.remove-button {
+  background-color: rgba(255, 0, 110, 0.1);
+}
+
+.remove-button:hover {
+  background-color: rgba(255, 0, 110, 0.2);
+}
+
+.remove-button:active {
+  background-color: #ff006e;
+  color: white;
 }
 
 /* Sliders */
@@ -219,6 +247,36 @@
 @keyframes pulse {
   0%, 100% { opacity: 0.6; }
   50% { opacity: 1; }
+}
+
+/* Empty track upload button */
+.empty-track-upload {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 5;
+}
+
+.upload-button {
+  background: linear-gradient(135deg, var(--gradient-primary-start), var(--gradient-primary-mid), var(--gradient-primary-end));
+  color: var(--text-inverse);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  font-weight: var(--font-medium);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  transition: var(--transition-base);
+  border: none;
+  font-size: var(--text-sm);
+}
+
+.upload-button:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+  filter: brightness(1.1);
 }
 
 @media (max-width: 768px) {

@@ -17,6 +17,7 @@ interface ClipProps {
   onSelect?:       (clipId: string) => void
   onMove?:         (clipId: string, newStartTime: number) => void
   onResize?:       (clipId: string, newDuration: number) => void
+  onMoveToTrack?:  (clipId: string, targetTrackId: string, newStartTime: number) => void
 }
 
 
@@ -27,15 +28,18 @@ function Clip ({
   isSelected = false,
   onSelect,
   onMove,
-  onResize
+  onResize,
+  onMoveToTrack
 }: ClipProps) {
   const nodeRef     = useRef<HTMLDivElement>(null)
   const modifyState = useRef({
-    dragging:  false,
-    resizing:  false,
-    startTime: clip.startTime,
-    duration:  clip.duration,
-    startX:    0,
+    dragging:       false,
+    resizing:       false,
+    startTime:      clip.startTime,
+    duration:       clip.duration,
+    startX:         0,
+    startY:         0,
+    currentTrackId: '',
   })
 
 
@@ -49,9 +53,23 @@ function Clip ({
 
   console.log(clipLeft, displayStartTime)
 
-  const setDragStart = (x: number, startTime: number) => {
+  const setDragStart = (x: number, y: number, startTime: number) => {
     modifyState.current.startX = x
+    modifyState.current.startY = y
     modifyState.current.startTime = startTime
+  }
+
+  // Detect target track based on mouse position
+  const getTargetTrackId = (clientY: number): string | null => {
+    const trackElements = document.querySelectorAll('.audio-track')
+    for (const trackElement of trackElements) {
+      const rect = trackElement.getBoundingClientRect()
+      if (clientY >= rect.top && clientY <= rect.bottom) {
+        const trackId = trackElement.getAttribute('data-track-id')
+        return trackId
+      }
+    }
+    return null
   }
 
   // Handle clip selection
@@ -77,7 +95,7 @@ function Clip ({
     else
       modifyState.current.dragging = true
 
-    setDragStart(event.clientX, clip.startTime)
+    setDragStart(event.clientX, event.clientY, clip.startTime)
 
     // Add global event listeners
     document.addEventListener('mousemove', handleMouseMove)
@@ -87,36 +105,70 @@ function Clip ({
   // Handle drag/resize movement (visual only during drag)
   const handleMouseMove = (event: MouseEvent) => {
     const deltaX    = event.clientX - modifyState.current.startX
+    const deltaY    = event.clientY - modifyState.current.startY
     const deltaTime = deltaX / pixelsPerSecond
-
-    console.log(deltaX, modifyState.current, deltaTime)
 
     if (modifyState.current.dragging) {
       const newStartTime = Math.max(0, clip.startTime + deltaTime)
       modifyState.current.startTime = newStartTime
+
+      // Check for track change during drag
+      const targetTrackId = getTargetTrackId(event.clientY)
+      modifyState.current.currentTrackId = targetTrackId || ''
+
+      // Update visual position immediately
+      if (nodeRef.current) {
+        const translateX = timeToPixels(modifyState.current.startTime, pixelsPerSecond)
+        const translateY = targetTrackId && targetTrackId !== clip.trackId ? deltaY : 0
+        nodeRef.current.style.transform = `translate(${translateX}px, ${translateY}px)`
+
+        // Add visual feedback for track crossing
+        if (targetTrackId && targetTrackId !== clip.trackId) {
+          nodeRef.current.style.opacity = '0.7'
+          nodeRef.current.style.boxShadow = '0 4px 12px rgba(255, 85, 0, 0.3)'
+        }
+        else {
+          nodeRef.current.style.opacity = '1'
+          nodeRef.current.style.boxShadow = ''
+        }
+      }
     }
     else if (modifyState.current.resizing) {
       const newDuration = Math.max(0.1, clip.duration + deltaTime)
       modifyState.current.duration = newDuration
-    }
 
-    nodeRef.current?.style.setProperty('transform', `translateX(${timeToPixels(modifyState.current.startTime, pixelsPerSecond)}px`)
+      // Update visual position for resize
+      if (nodeRef.current)
+        nodeRef.current.style.transform = `translateX(${timeToPixels(modifyState.current.startTime, pixelsPerSecond)}px)`
+    }
   }
 
   // Handle drag/resize end (commit changes)
   const handleMouseUp = () => {
     // Commit the changes when drag/resize ends
     if (modifyState.current.dragging)
-      onMove?.(clip.id, modifyState.current.startTime)
+      if (modifyState.current.currentTrackId && modifyState.current.currentTrackId !== clip.trackId)
+        onMoveToTrack?.(clip.id, modifyState.current.currentTrackId, modifyState.current.startTime)
+      else
+        onMove?.(clip.id, modifyState.current.startTime)
     else if (modifyState.current.resizing)
       onResize?.(clip.id, modifyState.current.duration)
 
+    // Reset state
     modifyState.current.dragging = false
     modifyState.current.resizing = false
+    modifyState.current.currentTrackId = ''
 
     // Remove global event listeners
     document.removeEventListener('mousemove', handleMouseMove)
     document.removeEventListener('mouseup', handleMouseUp)
+
+    // Reset visual styling
+    if (nodeRef.current) {
+      nodeRef.current.style.transform = ''
+      nodeRef.current.style.opacity = ''
+      nodeRef.current.style.boxShadow = ''
+    }
   }
 
   // Reset temp values when clip props change

@@ -21,6 +21,14 @@
   --accent-warning: #ffbe0b;
   --accent-danger: #ff006e;
 
+  /* Pastel Gradient Colors */
+  --gradient-primary-start: #ffb3d9;
+  --gradient-primary-mid: #ffc3a0;
+  --gradient-primary-end: #ffd4a3;
+  --gradient-heading-start: #a8e6cf;
+  --gradient-heading-mid: #b8e0d2;
+  --gradient-heading-end: #c8dbd4;
+
   /* Text Colors */
   --text-primary: #ffffff;
   --text-secondary: #dddddd;
@@ -185,7 +193,14 @@
     margin: 0;
   }
 
-  h1 { font-size: var(--text-2xl); }
+  h1 { 
+    font-size: var(--text-2xl);
+    background: linear-gradient(135deg, var(--gradient-heading-start), var(--gradient-heading-mid), var(--gradient-heading-end));
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-fill-color: transparent;
+  }
   h2 { font-size: var(--text-xl); }
   h3 { font-size: var(--text-lg); }
   h4 { font-size: var(--text-base); }
@@ -227,6 +242,40 @@
   button:disabled {
     opacity: 0.6;
     cursor: not-allowed;
+  }
+
+  /* Primary Button Styles */
+  .btn-primary {
+    background: linear-gradient(135deg, var(--gradient-primary-start), var(--gradient-primary-mid), var(--gradient-primary-end));
+    color: var(--text-inverse);
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius-md);
+    font-weight: var(--font-medium);
+    transition: var(--transition-base);
+    border: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+    filter: brightness(1.1);
+  }
+
+  .btn-primary:active {
+    transform: translateY(0);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .btn-primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
   }
 
   /* Form Elements */

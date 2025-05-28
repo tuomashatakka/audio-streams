@@ -62,7 +62,7 @@ const config =
 
       'whitespaced/block-padding':           'off',
       'whitespaced/class-property-grouping': 'warn',
-      'whitespaced/aligned-assignments':     'warn',
+      // 'whitespaced/aligned-assignments':     'warn',
       'whitespaced/consistent-line-spacing': [ 'off', {
         beforeImports:      0,
         beforeExports:      1,

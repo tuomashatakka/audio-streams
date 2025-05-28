@@ -2,20 +2,23 @@
  * Timeline Component - displays time ruler and playback head
  */
 
-import { useRef, useEffect, useCallback, useMemo } from 'react'
+import { useRef, useEffect, useCallback, useMemo, useState } from 'react'
 import { formatTime, timeToPixels, pixelsToTime } from '../../utils/audioUtils'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import './Timeline.css'
 
 
 interface TimelineProps {
-  duration:        number
-  currentTime:     number
-  pixelsPerSecond: number
-  bpm:             number
-  timeSignature:   { numerator: number; denominator: number }
-  height?:         number
-  onScrub:         (time: number) => void
-  onZoomChange:    (pixelsPerSecond: number) => void
+  duration:          number
+  currentTime:       number
+  pixelsPerSecond:   number
+  bpm:               number
+  timeSignature:     { numerator: number; denominator: number }
+  height?:           number
+  isCollapsed?:      boolean
+  onScrub:           (time: number) => void
+  onZoomChange:      (pixelsPerSecond: number) => void
+  onToggleCollapse?: () => void
 }
 
 
@@ -26,8 +29,10 @@ function Timeline ({
   bpm,
   timeSignature,
   height = 48,
+  isCollapsed = false,
   onScrub,
-  onZoomChange
+  onZoomChange,
+  onToggleCollapse
 }: TimelineProps) {
   const canvasRef    = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -179,7 +184,7 @@ function Timeline ({
   const zoomIn    = useCallback(() => onZoomChange(pixelsPerSecond * 1.125), [ pixelsPerSecond ])
   const zoomLevel = useMemo(() => Math.round(pixelsPerSecond), [ pixelsPerSecond ])
 
-  return <div className={`timeline-container ${isDragging.current ? 'scrubbing' : ''}`} style={{ height }}>
+  return <div className={`timeline-container ${isDragging.current ? 'scrubbing' : ''} ${isCollapsed ? 'collapsed' : ''}`} style={{ height }}>
     <div
       ref={containerRef}
       className='timeline-canvas-container'
@@ -201,10 +206,22 @@ function Timeline ({
       </div>
     </div>
 
-    <div className='timeline-controls'>
-      <button className='zoom-button' onClick={zoomOut} title='Zoom out'>-</button>
-      <span className='zoom-level'>{zoomLevel}px/s</span>
-      <button className='zoom-button' onClick={zoomIn} title='Zoom in'>+</button>
+    <div className={`timeline-controls ${isCollapsed ? 'collapsed' : ''}`}>
+      <button
+        className='collapse-button'
+        onClick={onToggleCollapse}
+        title={isCollapsed ? 'Expand controls' : 'Collapse controls'}
+      >
+        {isCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+      </button>
+
+      {!isCollapsed &&
+        <>
+          <button className='zoom-button' onClick={zoomOut} title='Zoom out'>-</button>
+          <span className='zoom-level'>{zoomLevel}px/s</span>
+          <button className='zoom-button' onClick={zoomIn} title='Zoom in'>+</button>
+        </>
+      }
     </div>
   </div>
 }

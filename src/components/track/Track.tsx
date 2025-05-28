@@ -6,23 +6,27 @@ import { useCallback } from 'react'
 import { AudioTrack as AudioTrackType } from '../../types/audio'
 import { timeToPixels } from '../../utils/audioUtils'
 import Clip from '../clip/Clip'
-import { Volume2, VolumeX, Headphones } from 'lucide-react'
+import { Volume2, VolumeX, Headphones, Trash2, Upload } from 'lucide-react'
 import './Track.css'
 
 
 interface TrackProps {
-  track:            AudioTrackType
-  pixelsPerSecond:  number
-  trackHeight:      number
-  projectDuration:  number
-  selectedClipId?:  string | null
-  onTrackUpdate:    (trackId: string, updates: Partial<AudioTrackType>) => void
-  onClipSelect:     (clipId: string) => void
-  onClipMove:       (clipId: string, newStartTime: number) => void
-  onClipResize:     (clipId: string, newDuration: number) => void
-  onTrackHover?:    (trackId: string | null) => void
-  isHovered?:       boolean
-  showPlaceholder?: boolean
+  track:              AudioTrackType
+  pixelsPerSecond:    number
+  trackHeight:        number
+  projectDuration:    number
+  selectedClipId?:    string | null
+  isCollapsed?:       boolean
+  onTrackUpdate:      (trackId: string, updates: Partial<AudioTrackType>) => void
+  onClipSelect:       (clipId: string) => void
+  onClipMove:         (clipId: string, newStartTime: number) => void
+  onClipResize:       (clipId: string, newDuration: number) => void
+  onClipMoveToTrack?: (clipId: string, targetTrackId: string, newStartTime: number) => void
+  onTrackRemove?:     (trackId: string) => void
+  onFileUpload?:      (trackId: string, files: FileList) => void
+  onTrackHover?:      (trackId: string | null) => void
+  isHovered?:         boolean
+  showPlaceholder?:   boolean
 }
 
 
@@ -33,10 +37,14 @@ function Track ({
   trackHeight,
   projectDuration,
   selectedClipId,
+  isCollapsed = false,
   onTrackUpdate,
   onClipSelect,
   onClipMove,
   onClipResize,
+  onClipMoveToTrack,
+  onTrackRemove,
+  onFileUpload,
   onTrackHover,
   isHovered = false,
   showPlaceholder = false
@@ -68,6 +76,21 @@ function Track ({
     onTrackUpdate(track.id, { name: event.target.value })
   }, [ track.id, onTrackUpdate ])
 
+  // Handle track removal
+  const handleRemoveTrack = useCallback(() => {
+    if (window.confirm(`Are you sure you want to remove the track "${track.name}"?`))
+      onTrackRemove?.(track.id)
+  }, [ track.id, track.name, onTrackRemove ])
+
+  // Handle file upload
+  const handleFileUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files
+    if (files && onFileUpload) {
+      onFileUpload(track.id, files)
+      event.target.value = '' // Reset input
+    }
+  }, [ track.id, onFileUpload ])
+
   const trackWidth = timeToPixels(projectDuration, pixelsPerSecond)
 
   // Handle track hover for drag and drop
@@ -83,11 +106,12 @@ function Track ({
 
   return <div
     className={`audio-track ${isHovered ? 'hovered' : ''} ${showPlaceholder ? 'drag-target' : ''}`}
+    data-track-id={track.id}
     onMouseEnter={handleMouseEnter}
     onMouseLeave={handleMouseLeave}>
 
     {/* Track header/controls */}
-    <header className='track-header'>
+    <header className={`track-header ${isCollapsed ? 'collapsed' : ''}`}>
       <input
         type='text'
         value={track.name}
@@ -112,6 +136,14 @@ function Track ({
           onClick={handleSoloToggle}
           title={track.solo ? 'Unsolo' : 'Solo'}>
           <Headphones size={14} />
+        </button>
+
+        {/* Remove track button */}
+        <button
+          className='track-button remove-button'
+          onClick={handleRemoveTrack}
+          title='Remove track'>
+          <Trash2 size={14} />
         </button>
 
         {/* Volume slider */}
@@ -161,7 +193,7 @@ function Track ({
         className='track-lane'
         style={{
           width:      trackWidth,
-          height:     trackHeight, // Subtract header height
+          height:     trackHeight,
           borderLeft: `3px solid ${track.color}`
         }}
       />
@@ -172,13 +204,33 @@ function Track ({
           key={clip.id}
           clip={clip}
           pixelsPerSecond={pixelsPerSecond}
-          trackHeight={trackHeight} // Subtract header height
+          trackHeight={trackHeight}
           isSelected={selectedClipId === clip.id}
           onSelect={onClipSelect}
           onMove={onClipMove}
           onResize={onClipResize}
+          onMoveToTrack={onClipMoveToTrack}
         />
       )}
+
+      {/* Upload button for empty tracks */}
+      {track.clips.length === 0 && !isHovered &&
+        <div className='empty-track-upload'>
+          <label className='upload-button btn-primary' htmlFor={`file-upload-${track.id}`}>
+            <Upload size={16} />
+            Upload Audio
+          </label>
+
+          <input
+            id={`file-upload-${track.id}`}
+            type='file'
+            accept='audio/*'
+            multiple
+            onChange={handleFileUpload}
+            style={{ display: 'none' }}
+          />
+        </div>
+      }
 
       {/* Placeholder when hovering during drag */}
       {isHovered && showPlaceholder &&
