@@ -51,7 +51,7 @@ function Timeline ({
     canvas.height = height
 
     // Clear canvas
-    ctx.fillStyle = 'currentColor'
+    ctx.fillStyle = '#222222'
     ctx.fillRect(0, 0, width, height)
 
     // Set text properties

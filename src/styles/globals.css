@@ -522,3 +522,37 @@
     stroke-width: 0;
   }
 }
+
+
+
+
+
+.track-header {
+  position: absolute;
+  left: 0;
+  z-index: 10;
+  bottom: 0;
+  top: 0;
+  width: 420px;
+}
+.track-content {
+  margin-left: 420px;
+}
+.timeline-canvas-container {
+  left: 420px;
+  position: absolute;
+}
+.timeline-controls {
+  left: 0;
+  right: auto;
+  width: 420px;
+  top: 0;
+  bottom: 0;
+}
+.tracks-area {
+  overflow-x: auto;
+  overflow: auto;
+}
+.tracks-container {
+  overflow: unset;
+}
