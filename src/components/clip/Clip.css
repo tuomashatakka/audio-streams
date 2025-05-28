@@ -1,9 +1,10 @@
 .audio-clip {
   position: absolute;
-  top: 4px;
+  z-index: 100;
+  top: 0;
   left: 0;
   border: 0 solid transparent;
-  border-radius: var(--roundness, 1.5px);
+  border-radius: var(--roundness);
   cursor: grab;
   user-select: none;
   overflow: hidden;

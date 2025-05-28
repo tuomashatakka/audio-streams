@@ -26,6 +26,10 @@
   gap: 0;
 }
 
+.track-header.collapsed + .track-content {
+  margin-left: 20px;
+}
+
 .track-header.collapsed .track-name-input,
 .track-header.collapsed .track-controls {
   opacity: 0;
@@ -53,7 +57,7 @@
 .track-controls {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
   margin-left: auto;
 }
 
@@ -165,7 +169,6 @@
 /* Track content */
 .track-content {
   position: relative;
-  flex: 1;
   overflow: visible;
 }
 
@@ -197,16 +200,16 @@
     padding: 6px 8px;
     gap: 8px;
   }
-  
+
   .slider-container {
     min-width: 60px;
   }
-  
+
   .volume-slider,
   .pan-slider {
     width: 40px;
   }
-  
+
   .track-name-input {
     max-width: 100px;
   }
@@ -286,16 +289,16 @@
     padding: 8px;
     gap: 6px;
   }
-  
+
   .track-controls {
     justify-content: space-between;
     margin-left: 0;
   }
-  
+
   .slider-container {
     min-width: 50px;
   }
-  
+
   .slider-value {
     display: none;
   }
