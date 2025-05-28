@@ -5,6 +5,32 @@
   background-color: #121212;
   color: #ffffff;
   overflow: hidden;
+  position: relative;
+}
+
+/* Hotkeys indicator */
+.hotkeys-indicator {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  width: 32px;
+  height: 32px;
+  background-color: rgba(42, 42, 42, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  z-index: 1000;
+  cursor: help;
+  transition: all var(--duration-normal) var(--ease-out);
+}
+
+.hotkeys-indicator:hover {
+  background-color: rgba(255, 85, 0, 0.1);
+  border-color: var(--accent-primary);
+  transform: scale(1.1);
 }
 
 /* Audio workspace */

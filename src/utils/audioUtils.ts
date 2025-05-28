@@ -247,3 +247,93 @@ export function samplesToSeconds (samples: number, sampleRate: number): number {
 export function secondsToSamples (seconds: number, sampleRate: number): number {
   return seconds * sampleRate
 }
+
+/**
+ * Grid and timing utilities for audio editing hotkeys
+ */
+
+// Grid sizes in note divisions
+export enum GridSize {
+  WHOLE = 1,           // Whole note
+  HALF = 2,            // Half note  
+  QUARTER = 4,         // Quarter note (1 beat)
+  EIGHTH = 8,          // Eighth note
+  SIXTEENTH = 16,      // Sixteenth note (default for nudging)
+  THIRTY_SECOND = 32   // Thirty-second note
+}
+
+/**
+ * Calculate the duration of one grid unit in seconds
+ * @param bpm Beats per minute
+ * @param gridSize Grid division (default: sixteenth note)
+ * @param timeSignature Time signature (default: 4/4)
+ * @returns Duration in seconds
+ */
+export function getGridDuration(
+  bpm: number, 
+  gridSize: GridSize = GridSize.SIXTEENTH,
+  timeSignature: { numerator: number; denominator: number } = { numerator: 4, denominator: 4 }
+): number {
+  // Duration of one beat in seconds
+  const beatDuration = 60 / bpm
+  
+  // Duration of one grid unit
+  // For quarter note grid: beatDuration / 1 = full beat
+  // For sixteenth note grid: beatDuration / 4 = quarter beat
+  const gridDuration = beatDuration / (gridSize / 4)
+  
+  return gridDuration
+}
+
+/**
+ * Snap a time value to the nearest grid position
+ * @param time Time in seconds
+ * @param bpm Beats per minute
+ * @param gridSize Grid division
+ * @param timeSignature Time signature
+ * @returns Snapped time in seconds
+ */
+export function snapToGrid(
+  time: number,
+  bpm: number,
+  gridSize: GridSize = GridSize.SIXTEENTH,
+  timeSignature: { numerator: number; denominator: number } = { numerator: 4, denominator: 4 }
+): number {
+  const gridDuration = getGridDuration(bpm, gridSize, timeSignature)
+  return Math.round(time / gridDuration) * gridDuration
+}
+
+/**
+ * Move a time value by a number of grid units
+ * @param time Current time in seconds
+ * @param gridUnits Number of grid units to move (positive = right, negative = left)
+ * @param bpm Beats per minute
+ * @param gridSize Grid division
+ * @param timeSignature Time signature
+ * @returns New time in seconds
+ */
+export function moveByGrid(
+  time: number,
+  gridUnits: number,
+  bpm: number,
+  gridSize: GridSize = GridSize.SIXTEENTH,
+  timeSignature: { numerator: number; denominator: number } = { numerator: 4, denominator: 4 }
+): number {
+  const gridDuration = getGridDuration(bpm, gridSize, timeSignature)
+  return time + (gridUnits * gridDuration)
+}
+
+/**
+ * Constrain a time value to valid bounds
+ * @param time Time in seconds
+ * @param minTime Minimum allowed time (default: 0)
+ * @param maxTime Maximum allowed time
+ * @returns Constrained time
+ */
+export function constrainTime(time: number, minTime: number = 0, maxTime?: number): number {
+  let constrainedTime = Math.max(minTime, time)
+  if (maxTime !== undefined) {
+    constrainedTime = Math.min(maxTime, constrainedTime)
+  }
+  return constrainedTime
+}

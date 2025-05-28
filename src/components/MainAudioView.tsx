@@ -2,18 +2,20 @@
  * Main Audio View Component - the primary interface for the audio streams module
  */
 
-import { useCallback } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import { useAudioEngine } from '../contexts/AudioEngineContext'
 import { useDroppable } from '../hooks/useDroppable'
 import { AudioClip } from '../types/audio'
 import Timeline from './timeline/Timeline'
 import Track from './track/Track'
 import PlaybackControls from './playback-controls/PlaybackControls'
+import HotkeysHandler, { HotkeysConfig } from '../utils/hotkeysHandler'
 import './MainAudioView.css'
 import '../styles/drag-drop.css'
 
 function MainAudioView () {
   const { state, dispatch, resumeAudioContext, samplesToSeconds, secondsToSamples, handleFilesSelected } = useAudioEngine()
+  const hotkeysHandlerRef = useRef<HotkeysHandler | null>(null)
 
   // Playback controls
   const handlePlay = useCallback(() => {
@@ -28,6 +30,21 @@ function MainAudioView () {
     dispatch({ type: 'SET_PLAYING', isPlaying: false })
     dispatch({ type: 'SET_CURRENT_SAMPLES', samples: 0 })
   }, [ dispatch ])
+
+  const handleTogglePlayback = useCallback(() => {
+    if (state.audioEngine.isPlaying) {
+      handlePause()
+    } else {
+      handlePlay()
+    }
+  }, [state.audioEngine.isPlaying, handlePlay, handlePause])
+
+  const handleRestartPlayback = useCallback(() => {
+    dispatch({ type: 'SET_CURRENT_SAMPLES', samples: 0 })
+    if (!state.audioEngine.isPlaying) {
+      handlePlay()
+    }
+  }, [dispatch, state.audioEngine.isPlaying, handlePlay])
 
   const handleUserGesture = useCallback(async () => {
     console.log('User gesture detected - resuming AudioContext')
@@ -83,6 +100,62 @@ function MainAudioView () {
       .filter(Boolean) as AudioClip[]
   }, [state.project.tracks, state.clips])
 
+  // Get currently selected clip
+  const getSelectedClip = useCallback((): AudioClip | null => {
+    if (!state.ui.selectedClipId) return null
+    return state.clips.find(clip => clip.id === state.ui.selectedClipId) || null
+  }, [state.ui.selectedClipId, state.clips])
+
+  // Hotkeys configuration
+  const hotkeysConfig: HotkeysConfig = {
+    // Clip manipulation
+    onNudgeLeft: handleClipMove,
+    onNudgeRight: handleClipMove,
+    onShortenClip: handleClipResize,
+    onLengthenClip: handleClipResize,
+    
+    // Playback control
+    onTogglePlayback: handleTogglePlayback,
+    onRestartPlayback: handleRestartPlayback,
+    
+    // State getters
+    getSelectedClip,
+    getBPM: () => state.project.bpm,
+    getTimeSignature: () => state.project.timeSignature,
+    getProjectDuration: () => state.project.duration,
+    isPlaying: () => state.audioEngine.isPlaying
+  }
+
+  // Initialize and cleanup hotkeys
+  useEffect(() => {
+    if (!hotkeysHandlerRef.current) {
+      hotkeysHandlerRef.current = new HotkeysHandler(hotkeysConfig)
+      hotkeysHandlerRef.current.enable()
+    }
+
+    // Cleanup on unmount
+    return () => {
+      hotkeysHandlerRef.current?.disable()
+    }
+  }, [])
+
+  // Update hotkeys config when handlers change
+  useEffect(() => {
+    if (hotkeysHandlerRef.current) {
+      hotkeysHandlerRef.current.updateConfig(hotkeysConfig)
+    }
+  }, [
+    handleClipMove,
+    handleClipResize, 
+    handleTogglePlayback,
+    handleRestartPlayback,
+    getSelectedClip,
+    state.project.bpm,
+    state.project.timeSignature,
+    state.project.duration,
+    state.audioEngine.isPlaying
+  ])
+
   // Drag and drop handling for tracks area
   const { dragProps } = useDroppable({
     onFilesDropped: handleFilesSelected,
@@ -108,6 +181,12 @@ function MainAudioView () {
   const currentTime = samplesToSeconds(state.audioEngine.currentSamples)
 
   return <div className='main-audio-view'>
+    {/* Hotkeys indicator */}
+    {hotkeysHandlerRef.current?.enabled && (
+      <div className='hotkeys-indicator' title='Keyboard shortcuts are active'>
+        🎹
+      </div>
+    )}
 
     <PlaybackControls
       isPlaying={state.audioEngine.isPlaying}
