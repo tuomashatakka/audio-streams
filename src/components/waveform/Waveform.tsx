@@ -94,15 +94,15 @@ function Waveform ({
   }, [ waveformData, width, height ])
 
   if (!waveformData.length)
-    return <svg style={{ color }} className={`audio-waveform ${className}`} width={width} height={height} role='img' aria-label='Empty audio waveform'>
-      <rect className='background' width={width} height={height} />
+    return <svg style={{ color }} className={ `audio-waveform ${className}` } width={ width } height={ height } role='img' aria-label='Empty audio waveform'>
+      <rect className='background' width={ width } height={ height } />
     </svg>
 
 
-  return <svg style={{ color }} className={`audio-waveform ${className}`} width={width} height={height} role='img' aria-label='Audio waveform visualization'>
-    <rect className='background' width={width} height={height} fill={backgroundColor} />
-    <path className='fill' d={svgPath} fill={ color } />
-    <path className='stroke' d={strokePath} stroke={ color } />
+  return <svg style={{ color }} className={ `audio-waveform ${className}` } width={ width } height={ height } role='img' aria-label='Audio waveform visualization'>
+    <rect className='background' width={ width } height={ height } fill={ backgroundColor } />
+    <path className='fill' d={ svgPath } fill={ color } />
+    <path className='stroke' d={ strokePath } stroke={ color } />
   </svg>
 }
 

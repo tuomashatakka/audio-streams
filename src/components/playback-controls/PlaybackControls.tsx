@@ -54,27 +54,27 @@ function PlaybackControls ({
     {/* Transport buttons */}
     <div className='transport-buttons'>
       <button
-        className={`transport-button play-pause ${isPlaying ? 'playing' : ''}`}
-        onClick={isPlaying ? onPause : handlePlay}
-        title={isPlaying ? 'Pause' : 'Play'}
+        className={ `transport-button play-pause ${isPlaying ? 'playing' : ''}` }
+        onClick={ isPlaying ? onPause : handlePlay }
+        title={ isPlaying ? 'Pause' : 'Play' }
       >
-        {isPlaying ? <Pause size={20} /> : <Play size={20} />}
+        {isPlaying ? <Pause size={ 20 } /> : <Play size={ 20 } />}
       </button>
 
       <button
         className='transport-button stop'
-        onClick={onStop}
+        onClick={ onStop }
         title='Stop'
       >
-        <Square size={18} />
+        <Square size={ 18 } />
       </button>
 
       <button
-        className={`transport-button loop ${isLooping ? 'active' : ''}`}
-        onClick={onLoopToggle}
-        title={isLooping ? 'Disable Loop' : 'Enable Loop'}
+        className={ `transport-button loop ${isLooping ? 'active' : ''}` }
+        onClick={ onLoopToggle }
+        title={ isLooping ? 'Disable Loop' : 'Enable Loop' }
       >
-        <RotateCcw size={18} />
+        <RotateCcw size={ 18 } />
       </button>
     </div>
 
@@ -99,17 +99,17 @@ function PlaybackControls ({
 
     {/* Master volume */}
     <div className='master-volume'>
-      <Volume2 size={16} className='volume-icon' />
+      <Volume2 size={ 16 } className='volume-icon' />
 
       <input
         type='range'
         min='0'
         max='1'
         step='0.01'
-        value={volume}
-        onChange={handleVolumeChange}
+        value={ volume }
+        onChange={ handleVolumeChange }
         className='master-volume-slider'
-        title={`Master Volume: ${Math.round(volume * 100)}%`}
+        title={ `Master Volume: ${Math.round(volume * 100)}%` }
       />
 
       <span className='volume-value'>{Math.round(volume * 100)}%</span>

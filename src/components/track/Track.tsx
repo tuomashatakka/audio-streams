@@ -105,17 +105,17 @@ function Track ({
   }, [ showPlaceholder, onTrackHover ])
 
   return <div
-    className={`audio-track ${isHovered ? 'hovered' : ''} ${showPlaceholder ? 'drag-target' : ''}`}
-    data-track-id={track.id}
-    onMouseEnter={handleMouseEnter}
-    onMouseLeave={handleMouseLeave}>
+    className={ `audio-track ${isHovered ? 'hovered' : ''} ${showPlaceholder ? 'drag-target' : ''}` }
+    data-track-id={ track.id }
+    onMouseEnter={ handleMouseEnter }
+    onMouseLeave={ handleMouseLeave }>
 
     {/* Track header/controls */}
-    <header className={`track-header ${isCollapsed ? 'collapsed' : ''}`}>
+    <header className={ `track-header ${isCollapsed ? 'collapsed' : ''}` }>
       <input
         type='text'
-        value={track.name}
-        onChange={handleNameChange}
+        value={ track.name }
+        onChange={ handleNameChange }
         className='track-name-input'
         style={{ color: track.color }}
       />
@@ -123,27 +123,27 @@ function Track ({
       <div className='track-controls'>
         {/* Mute button */}
         <button
-          className={`track-button mute-button ${track.muted ? 'active' : ''}`}
-          onClick={handleMuteToggle}
-          title={track.muted ? 'Unmute' : 'Mute'}
+          className={ `track-button mute-button ${track.muted ? 'active' : ''}` }
+          onClick={ handleMuteToggle }
+          title={ track.muted ? 'Unmute' : 'Mute' }
         >
-          {track.muted ? <VolumeX size={14} /> : <Volume2 size={14} />}
+          {track.muted ? <VolumeX size={ 14 } /> : <Volume2 size={ 14 } />}
         </button>
 
         {/* Solo button */}
         <button
-          className={`track-button solo-button ${track.solo ? 'active' : ''}`}
-          onClick={handleSoloToggle}
-          title={track.solo ? 'Unsolo' : 'Solo'}>
-          <Headphones size={14} />
+          className={ `track-button solo-button ${track.solo ? 'active' : ''}` }
+          onClick={ handleSoloToggle }
+          title={ track.solo ? 'Unsolo' : 'Solo' }>
+          <Headphones size={ 14 } />
         </button>
 
         {/* Remove track button */}
         <button
           className='track-button remove-button'
-          onClick={handleRemoveTrack}
+          onClick={ handleRemoveTrack }
           title='Remove track'>
-          <Trash2 size={14} />
+          <Trash2 size={ 14 } />
         </button>
 
         {/* Volume slider */}
@@ -155,10 +155,10 @@ function Track ({
             min='0'
             max='1'
             step='0.01'
-            value={track.volume}
-            onChange={handleVolumeChange}
+            value={ track.volume }
+            onChange={ handleVolumeChange }
             className='volume-slider'
-            title={`Volume: ${Math.round(track.volume * 100)}%`}
+            title={ `Volume: ${Math.round(track.volume * 100)}%` }
           />
 
           <output className='slider-value'>{Math.round(track.volume * 100)}</output>
@@ -173,10 +173,10 @@ function Track ({
             min='-1'
             max='1'
             step='0.01'
-            value={track.pan}
-            onChange={handlePanChange}
+            value={ track.pan }
+            onChange={ handlePanChange }
             className='pan-slider'
-            title={`Pan: ${track.pan > 0 ? 'R' : track.pan < 0 ? 'L' : 'C'}${Math.abs(Math.round(track.pan * 100))}`}
+            title={ `Pan: ${track.pan > 0 ? 'R' : track.pan < 0 ? 'L' : 'C'}${Math.abs(Math.round(track.pan * 100))}` }
           />
 
           <output className='slider-value'>
@@ -201,31 +201,31 @@ function Track ({
       {/* Audio clips */}
       {track.clips.map(clip =>
         <Clip
-          key={clip.id}
-          clip={clip}
-          pixelsPerSecond={pixelsPerSecond}
-          trackHeight={trackHeight}
-          isSelected={selectedClipId === clip.id}
-          onSelect={onClipSelect}
-          onMove={onClipMove}
-          onResize={onClipResize}
-          onMoveToTrack={onClipMoveToTrack}
+          key={ clip.id }
+          clip={ clip }
+          pixelsPerSecond={ pixelsPerSecond }
+          trackHeight={ trackHeight }
+          isSelected={ selectedClipId === clip.id }
+          onSelect={ onClipSelect }
+          onMove={ onClipMove }
+          onResize={ onClipResize }
+          onMoveToTrack={ onClipMoveToTrack }
         />
       )}
 
       {/* Upload button for empty tracks */}
       {track.clips.length === 0 && !isHovered &&
         <div className='empty-track-upload'>
-          <label className='upload-button btn-primary' htmlFor={`file-upload-${track.id}`}>
-            <Upload size={16} />
+          <label className='upload-button btn-primary' htmlFor={ `file-upload-${track.id}` }>
+            <Upload size={ 16 } />
           </label>
 
           <input
-            id={`file-upload-${track.id}`}
+            id={ `file-upload-${track.id}` }
             type='file'
             accept='audio/*'
             multiple
-            onChange={handleFileUpload}
+            onChange={ handleFileUpload }
             style={{ display: 'none' }}
           />
         </div>

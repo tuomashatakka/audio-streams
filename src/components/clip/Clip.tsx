@@ -178,7 +178,7 @@ function Clip ({
   }, [ clip.startTime, clip.duration ])
 
   return <div
-    className={`audio-clip ${isSelected ? 'selected' : ''} ${modifyState.current.dragging ? 'dragging' : ''} ${modifyState.current.resizing ? 'resizing' : ''}`}
+    className={ `audio-clip ${isSelected ? 'selected' : ''} ${modifyState.current.dragging ? 'dragging' : ''} ${modifyState.current.resizing ? 'resizing' : ''}` }
     style={{
       transform:       `translateX(${clipLeft}px)`,
       width:           `${clipWidth}px`,
@@ -186,10 +186,10 @@ function Clip ({
       backgroundColor: `${clip.color}40` || '#3a86ff40',
       borderColor:     isSelected ? `${clip.color}a0` : 'transparent'
     }}
-    onClick={handleClick}
-    onMouseDown={handleMouseDown}
-    title={`${clip.name} - ${formatTime(clip.duration)}`}
-    ref={nodeRef}
+    onClick={ handleClick }
+    onMouseDown={ handleMouseDown }
+    title={ `${clip.name} - ${formatTime(clip.duration)}` }
+    ref={ nodeRef }
   >
     {clip.isLoading
       ? <div className='clip-loading'>
@@ -199,10 +199,10 @@ function Clip ({
       : <>
         {clip.waveformData.length > 0 &&
           <Waveform
-            waveformData={clip.waveformData}
-            width={clipWidth - 4}
-            height={clipHeight - 4} // Leave space for label
-            color={clip.color}
+            waveformData={ clip.waveformData }
+            width={ clipWidth - 4 }
+            height={ clipHeight - 4 } // Leave space for label
+            color={ clip.color }
             className='clip-waveform'
           />
         }

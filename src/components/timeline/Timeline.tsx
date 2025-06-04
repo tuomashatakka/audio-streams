@@ -183,7 +183,7 @@ export default function Timeline ({
           width={ width }
           height={ height }
           fill='#222222'
-      />
+        />
 
         {timelineData.beatMarkers.map((marker, index) =>
           <line
