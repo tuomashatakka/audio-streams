@@ -256,13 +256,14 @@
 .empty-track-upload {
   position: absolute;
   top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  left: 0;
+  transform: translate(0, -50%);
   z-index: 5;
 }
 
 .upload-button {
   background: linear-gradient(135deg, var(--gradient-primary-start), var(--gradient-primary-mid), var(--gradient-primary-end));
+  border: none;
   color: var(--text-inverse);
   padding: var(--space-3) var(--space-4);
   border-radius: var(--radius-md);
@@ -271,11 +272,22 @@
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
+  box-shadow: var(--shadow-sm);
   transition: var(--transition-base);
   border: none;
   font-size: var(--text-sm);
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border-radius: 50%;
+  svg {
+    display: block;
+    width: 20px;
+    height: 20px;
+  }
 }
 
+.upload-button:focus,
 .upload-button:hover {
   transform: translateY(-1px);
   box-shadow: var(--shadow-md);

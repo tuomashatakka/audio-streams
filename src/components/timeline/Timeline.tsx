@@ -2,7 +2,7 @@
  * Timeline Component - displays time ruler and playback head using SVG
  */
 
-import { useRef, useCallback, useMemo } from 'react'
+import { useRef, useCallback, useMemo, useLayoutEffect, useState } from 'react'
 import { formatTime, timeToPixels, pixelsToTime } from '../../utils/audioUtils'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import './Timeline.css'
@@ -21,8 +21,9 @@ interface TimelineProps {
   onToggleCollapse?: () => void
 }
 
+const ZOOM_SPEED = 1.02
 
-function Timeline ({
+export default function Timeline ({
   duration,
   currentTime,
   pixelsPerSecond,
@@ -34,10 +35,10 @@ function Timeline ({
   onZoomChange,
   onToggleCollapse
 }: TimelineProps) {
-  const containerRef = useRef<HTMLDivElement>(null)
-  const isDragging   = useRef(false)
-
-  const width = timeToPixels(duration, pixelsPerSecond)
+  const containerRef            = useRef<HTMLDivElement>(null)
+  const isDragging              = useRef(false)
+  const [ uiWidth, setUiWidth ] = useState(0)
+  const width                   = timeToPixels(duration, pixelsPerSecond)
 
   // Generate timeline markers data
   const timelineData = useMemo(() => {
@@ -101,14 +102,14 @@ function Timeline ({
     if (!containerRef.current)
       return
 
-    const rect = containerRef.current.getBoundingClientRect()
-    const x    = event.clientX - rect.left
-    const time = pixelsToTime(x, pixelsPerSecond)
+    const rect        = containerRef.current.getBoundingClientRect()
+    const x           = event.clientX - rect.left
+    const time        = pixelsToTime(x, pixelsPerSecond)
+    const clampedTime = Math.max(0, Math.min(time, duration))
 
     isDragging.current = true
 
     // Immediate scrub on click
-    const clampedTime = Math.max(0, Math.min(time, duration))
     onScrub(clampedTime)
 
     // Add global event listeners for dragging
@@ -135,13 +136,26 @@ function Timeline ({
 
   // Handle zoom with mouse wheel
   const handleWheel = useCallback((event: React.WheelEvent) => {
+    console.log(event)
     event.preventDefault()
 
-    const zoomFactor         = event.deltaY > 0 ? 0.9 : 1.1
+    const zoomFactor         = event.deltaY > 0 ? 1 / ZOOM_SPEED : ZOOM_SPEED
     const newPixelsPerSecond = Math.max(10, Math.min(200, pixelsPerSecond * zoomFactor))
 
     onZoomChange(newPixelsPerSecond)
   }, [ pixelsPerSecond, onZoomChange ])
+
+  useLayoutEffect(() => {
+    if (!containerRef.current)
+      return
+
+    const rect = containerRef.current.parentElement?.getBoundingClientRect()
+    if (rect)
+      setUiWidth(rect.width)
+
+    // containerRef.current.parentElement?.style.setProperty('width', `${rect.width}px`)
+    console.log(rect)
+  }, [ containerRef ])
 
   // Calculate playhead position
   const playheadPosition = timeToPixels(currentTime, pixelsPerSecond)
@@ -150,67 +164,64 @@ function Timeline ({
   const zoomIn    = useCallback(() => onZoomChange(pixelsPerSecond * 1.125), [ pixelsPerSecond ])
   const zoomLevel = useMemo(() => Math.round(pixelsPerSecond), [ pixelsPerSecond ])
 
-  return <div className={`timeline-container ${isDragging.current ? 'scrubbing' : ''} ${isCollapsed ? 'collapsed' : ''}`} style={{ height }}>
+  return <div className={ `timeline-container ${isDragging.current ? 'scrubbing' : ''} ${isCollapsed ? 'collapsed' : ''}` } style={{ width: uiWidth }}>
     <div
-      ref={containerRef}
+      ref={ containerRef }
       className='timeline-svg-container'
-      onMouseDown={handleMouseDown}
-      onWheel={handleWheel}
-      style={{ width }}
-    >
-      <svg 
-        className='timeline-svg' 
-        width={width} 
-        height={height}
-        viewBox={`0 0 ${width} ${height}`}
-        role="img"
-        aria-label={`Timeline showing ${formatTime(duration)} duration, current time ${formatTime(currentTime)}`}
-      >
-        {/* Background */}
-        <rect 
-          width={width} 
-          height={height} 
-          fill="#222222" 
-        />
+      onMouseDown={ handleMouseDown }
+      onWheel={ handleWheel }
+      style={{ width: uiWidth }}>
+      <svg
+        className='timeline-svg'
+        width={ uiWidth }
+        height={ height }
+        viewBox={ `0 0 ${uiWidth} ${height}` }
+        role='img'
+        aria-label={ `Timeline showing ${formatTime(duration)} duration, current time ${formatTime(currentTime)}` }>
 
-        {/* Beat/Bar markers */}
-        {timelineData.beatMarkers.map((marker, index) => (
+        <rect
+          width={ width }
+          height={ height }
+          fill='#222222'
+      />
+
+        {timelineData.beatMarkers.map((marker, index) =>
           <line
-            key={`beat-${index}`}
-            x1={marker.x}
-            y1={0}
-            x2={marker.x}
-            y2={marker.isBarStart ? 15 : 8}
-            stroke={marker.isBarStart ? '#ff5500' : '#ffbe0b'}
-            strokeWidth={marker.isBarStart ? 2 : 1}
-          />
-        ))}
+            key={ `beat-${index}` }
+            x1={ marker.x }
+            y1={ 0 }
+            x2={ marker.x }
+            y2={ marker.isBarStart ? 15 : 8 }
+            stroke={ marker.isBarStart ? '#ff5500' : '#ffbe0b' }
+            strokeWidth={ marker.isBarStart ? 2 : 1 } />
+        )}
 
         {/* Time markers */}
-        {timelineData.timeMarkers.map((marker, index) => (
-          <g key={`time-${index}`}>
+        {timelineData.timeMarkers.map((marker, index) =>
+          <g key={ `time-${index}` }>
             <line
-              x1={marker.x}
-              y1={height - (marker.isMajor ? 20 : 10)}
-              x2={marker.x}
-              y2={height}
-              stroke={marker.isMajor ? '#666666' : '#444444'}
-              strokeWidth={1}
+              x1={ marker.x }
+              y1={ height - (marker.isMajor ? 20 : 10) }
+              x2={ marker.x }
+              y2={ height }
+              stroke={ marker.isMajor ? '#666666' : '#444444' }
+              strokeWidth={ 1 }
             />
-            {marker.label && (
+
+            {marker.label &&
               <text
-                x={marker.x + 2}
-                y={height - 32}
-                fill="#aaaaaa"
-                fontSize="10"
-                fontFamily="system-ui"
-                dominantBaseline="hanging"
+                x={ marker.x + 2 }
+                y={ height - 32 }
+                fill='#aaaaaa'
+                fontSize='10'
+                fontFamily='system-ui'
+                dominantBaseline='hanging'
               >
                 {marker.label}
               </text>
-            )}
+            }
           </g>
-        ))}
+        )}
       </svg>
 
       {/* Playhead */}
@@ -226,24 +237,22 @@ function Timeline ({
       </div>
     </div>
 
-    <div className={`timeline-controls ${isCollapsed ? 'collapsed' : ''}`}>
+    <div className={ `timeline-controls ${isCollapsed ? 'collapsed' : ''}` }>
       <button
         className='collapse-button'
-        onClick={onToggleCollapse}
-        title={isCollapsed ? 'Expand controls' : 'Collapse controls'}
+        onClick={ onToggleCollapse }
+        title={ isCollapsed ? 'Expand controls' : 'Collapse controls' }
       >
-        {isCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+        {isCollapsed ? <ChevronRight size={ 16 } /> : <ChevronLeft size={ 16 } />}
       </button>
 
       {!isCollapsed &&
         <>
-          <button className='zoom-button' onClick={zoomOut} title='Zoom out'>-</button>
+          <button className='zoom-button' onClick={ zoomOut } title='Zoom out'>-</button>
           <span className='zoom-level'>{zoomLevel}px/s</span>
-          <button className='zoom-button' onClick={zoomIn} title='Zoom in'>+</button>
+          <button className='zoom-button' onClick={ zoomIn } title='Zoom in'>+</button>
         </>
       }
     </div>
   </div>
 }
-
-export default Timeline

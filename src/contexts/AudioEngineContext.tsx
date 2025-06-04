@@ -1,10 +1,9 @@
-/* eslint-disable max-lines */
 /**
  * AudioEngine Context - Global audio state and engine management
  * Centralizes ALL application state using useReducer pattern
  */
 
-import { createContext, useContext, useRef, useReducer, useCallback, useEffect, ReactNode } from 'react'
+import { createContext, useContext, useRef, useReducer, useCallback, useEffect, ReactNode, PropsWithChildren } from 'react'
 import { AudioTrack, AudioClip, AudioProject, FileProcessingState, WorkerMessage, WorkerMessageType, TrackColor } from '../types/audio'
 import { generateId, getRandomTrackColor, sanitizeFileName, calculateProjectDuration, isSupportedAudioFile } from '../utils/audioUtils'
 import { audioDecoder } from '../utils/audioDecoder'
@@ -13,6 +12,7 @@ import {
   createStereoPanner,
   createBufferSource,
 } from '../utils/audioUtils'
+import { AudioEngine } from '@/lib/AudioEngine'
 
 // Comprehensive application state
 interface AppState {
@@ -407,312 +407,96 @@ interface TrackNodes {
   clipNodes: Map<string, ClipNodes>
 }
 
-// Create the context
 const AudioEngineContext = createContext<AudioEngineContextValue | null>(null)
 
-// Provider props
-interface AudioEngineProviderProps {
-  children: ReactNode
-}
+type AudioEngineProviderProps = PropsWithChildren
 
 export function AudioEngineProvider ({ children }: AudioEngineProviderProps) {
   const [ state, dispatch ] = useReducer(appReducer, initialState)
 
-  // Audio context and nodes
-  const audioContextRef = useRef<AudioContext | null>(null)
-  const mainGainNodeRef = useRef<GainNode | null>(null)
-  const trackNodesRef   = useRef<Map<string, TrackNodes>>(new Map())
-  const fileInputRef    = useRef<HTMLInputElement>(null)
+  // Use a ref to hold the AudioEngine instance
+  const audioEngineInstanceRef = useRef<AudioEngine | null>(null)
+  const fileInputRef           = useRef<HTMLInputElement>(null)
 
-  // Playback state
-  const rafIdRef             = useRef<number | null>(null)
-  const startTimeRef         = useRef<number>(0)
-  const pausedAtSamplesRef   = useRef<number>(0)
-  const lastUpdateSamplesRef = useRef<number>(0)
+  // Callback for AudioEngine to update currentSamples in context state
+  const onUpdateCurrentSamples = useCallback((samples: number) => {
+    dispatch({ type: 'SET_CURRENT_SAMPLES', samples })
+  }, [ dispatch ])
 
-  // Mouse listener for AudioContext initialization
-  const mouseListenerRef = useRef<(() => void) | null>(null)
+  // Callback for AudioEngine to notify about successful AudioContext initialization
+  const onAudioContextInitialized = useCallback((sampleRate: number) => {
+    dispatch({ type: 'INITIALIZE_AUDIO_CONTEXT', sampleRate })
+  }, [ dispatch ])
 
-  // Utility functions for sample/time conversion
-  const samplesToSeconds = useCallback((samples: number): number => samples / state.audioEngine.sampleRate, [ state.audioEngine.sampleRate ])
-  const secondsToSamples = useCallback((seconds: number): number => Math.round(seconds * state.audioEngine.sampleRate), [ state.audioEngine.sampleRate ])
+  // Initialize AudioEngine once and keep it in a ref
+  useEffect(() => {
+    if (!audioEngineInstanceRef.current)
+      audioEngineInstanceRef.current = new AudioEngine(
+        state.audioEngine,
+        state.project,
+        onUpdateCurrentSamples,
+        onAudioContextInitialized
+      )
 
-  // Initialize audio context
-  const initializeAudioContext = useCallback(async () => {
-    if (audioContextRef.current)
-      return
+    // This effect ensures AudioEngine always has the latest state from React
+    // Call updateState on the AudioEngine instance
+    audioEngineInstanceRef.current.updateState(state.audioEngine, state.project, state.clips)
 
-    try {
-      audioContextRef.current = new AudioContext({
-        sampleRate:  44100,
-        latencyHint: 'interactive'
-      })
-
-      mainGainNodeRef.current = createGainNode(audioContextRef.current, state.audioEngine.volume)
-      mainGainNodeRef.current.connect(audioContextRef.current.destination)
-
-      dispatch({ type: 'INITIALIZE_AUDIO_CONTEXT', sampleRate: audioContextRef.current.sampleRate })
-
-      // Remove mouse listener once initialized
-      if (mouseListenerRef.current) {
-        document.removeEventListener('mousemove', mouseListenerRef.current)
-        mouseListenerRef.current = null
-      }
-
-      console.log('Audio context initialized:', {
-        sampleRate: audioContextRef.current.sampleRate,
-        state:      audioContextRef.current.state
-      })
+    // Dispose on unmount
+    return () => {
+      // audioEngineInstanceRef.current?.dispose()
+      // audioEngineInstanceRef.current = null
     }
-    catch (error) {
-      console.error('Failed to initialize audio context:', error)
-    }
-  }, [ state.audioEngine.volume ])
-
-  // Setup mouse listener for audio context initialization
-  if (!state.audioEngine.isInitialized && !mouseListenerRef.current) {
-    mouseListenerRef.current = () => {
-      initializeAudioContext()
-    }
-    document.addEventListener('mousemove', mouseListenerRef.current, { once: true })
-  }
-
+  }, [
+    state.audioEngine,
+    state.project,
+    state.clips, // Add state.clips to dependencies
+    onUpdateCurrentSamples,
+    onAudioContextInitialized
+  ])
 
   // Resume audio context
   const resumeAudioContext = useCallback(async () => {
-    if (!audioContextRef.current || audioContextRef.current.state === 'closed') {
-      audioContextRef.current = null
-      await initializeAudioContext()
-      if (!audioContextRef.current)
-        return false
-    }
-
-    try {
-      if (audioContextRef.current.state === 'suspended')
-        await audioContextRef.current.resume()
-
-      return audioContextRef.current.state === 'running'
-    }
-    catch (error) {
-      console.error('Failed to resume audio context:', error)
+    if (!audioEngineInstanceRef.current) {
+      console.warn('AudioEngine not initialized yet.')
       return false
     }
-  }, [ initializeAudioContext ])
-
-  // Setup audio nodes for all tracks
-  const setupAudioNodes = useCallback(() => {
-    if (!audioContextRef.current || !mainGainNodeRef.current)
-      return
-
-    const audioContext = audioContextRef.current
-    const mainGain     = mainGainNodeRef.current
-
-    // Clear existing nodes
-    trackNodesRef.current.forEach(track => {
-      track.clipNodes.forEach(clip => {
-        try {
-          clip.source.stop()
-        }
-        catch (e) { /* ignore */ }
-        clip.source.disconnect()
-        clip.gain.disconnect()
-        clip.panner.disconnect()
-      })
-      track.gain.disconnect()
-      track.panner.disconnect()
-    })
-    trackNodesRef.current.clear()
-
-    // Create nodes for each track
-    state.project.tracks.forEach(track => {
-      const trackGain   = createGainNode(audioContext, track.muted ? 0 : track.volume)
-      const trackPanner = createStereoPanner(audioContext, track.pan)
-
-      trackGain.connect(trackPanner)
-      trackPanner.connect(mainGain)
-
-      const clipNodes = new Map<string, ClipNodes>()
-      trackNodesRef.current.set(track.id, { gain: trackGain, panner: trackPanner, clipNodes })
-    })
-  }, [ state.project.tracks ])
-
-  // Schedule a clip for playback
-  const scheduleClip = useCallback((clip: AudioClip, trackNodes: TrackNodes) => {
-    if (!audioContextRef.current || !clip.audioBuffer)
-      return
-
-    const audioContext         = audioContextRef.current
-    const clipStartSamples     = secondsToSamples(clip.startTime)
-    const currentSamplesOffset = state.audioEngine.currentSamples
-
-    if (clipStartSamples + secondsToSamples(clip.duration) < currentSamplesOffset)
-      return
-
-    const source = createBufferSource(audioContext, clip.audioBuffer, Math.pow(2, clip.pitch / 12))
-    const gain   = createGainNode(audioContext, clip.volume)
-    const panner = createStereoPanner(audioContext)
-
-    source.connect(gain)
-    gain.connect(panner)
-    panner.connect(trackNodes.gain)
-
-    const startOffset       = Math.max(0, samplesToSeconds(currentSamplesOffset - clipStartSamples))
-    const scheduleStartTime = audioContext.currentTime + Math.max(0, samplesToSeconds(clipStartSamples - currentSamplesOffset))
-
-    source.start(scheduleStartTime, startOffset)
-    trackNodes.clipNodes.set(clip.id, { source, gain, panner })
-
-    source.onended = () => {
-      trackNodes.clipNodes.delete(clip.id)
-    }
-  }, [ secondsToSamples, samplesToSeconds, state.audioEngine.currentSamples ])
+    return await audioEngineInstanceRef.current.resumeAudioContext()
+  }, [])
 
   // Start audio playback
   const startPlayback = useCallback(async () => {
-    if (!state.audioEngine.isInitialized)
+    if (!audioEngineInstanceRef.current)
       return
-
-    const isContextRunning = await resumeAudioContext()
-    if (!isContextRunning || !audioContextRef.current)
-      return
-
-    const audioContext = audioContextRef.current
-
-    // Use state.audioEngine.currentSamples as the source of truth
-    const startFromSamples = state.audioEngine.currentSamples
-    startTimeRef.current = audioContext.currentTime - samplesToSeconds(startFromSamples)
-    pausedAtSamplesRef.current = startFromSamples
-    lastUpdateSamplesRef.current = startFromSamples
-
-    setupAudioNodes()
-
-    // Schedule all clips
-    state.project.tracks.forEach(track => {
-      const trackNodes = trackNodesRef.current.get(track.id)
-      if (!trackNodes)
-        return
-
-      // Get clips for this track
-      const trackClips = track.clipIds
-        .map(clipId => state.clips.find(clip => clip.id === clipId))
-        .filter(Boolean) as AudioClip[]
-
-      trackClips.forEach(clip => {
-        scheduleClip(clip, trackNodes)
-      })
-    })
-
-    // Start time update loop
-    const updateTime = () => {
-      if (!audioContextRef.current || !state.audioEngine.isPlaying)
-        return
-
-      const currentAudioTime = audioContextRef.current.currentTime - startTimeRef.current
-      const currentSamples   = secondsToSamples(Math.max(0, currentAudioTime))
-
-      // Only update if the samples have actually changed to avoid unnecessary re-renders
-      if (Math.abs(currentSamples - lastUpdateSamplesRef.current) > 1000) { // ~20ms threshold
-        lastUpdateSamplesRef.current = currentSamples
-        dispatch({ type: 'SET_CURRENT_SAMPLES', samples: currentSamples })
-      }
-
-      // Handle looping
-      if (state.audioEngine.isLooping && currentSamples >= state.audioEngine.loopEndSamples) {
-        const loopStartSamples = state.audioEngine.loopStartSamples
-        startTimeRef.current = audioContextRef.current.currentTime - samplesToSeconds(loopStartSamples)
-        lastUpdateSamplesRef.current = loopStartSamples
-        dispatch({ type: 'SET_CURRENT_SAMPLES', samples: loopStartSamples })
-
-        // Reschedule clips for loop
-        setupAudioNodes()
-        state.project.tracks.forEach(track => {
-          const trackNodes = trackNodesRef.current.get(track.id)
-          if (!trackNodes)
-            return
-
-          // Get clips for this track
-          const trackClips = track.clipIds
-            .map(clipId => state.clips.find(clip => clip.id === clipId))
-            .filter(Boolean) as AudioClip[]
-
-          trackClips.forEach(clip => {
-            scheduleClip(clip, trackNodes)
-          })
-        })
-      }
-
-      if (state.audioEngine.isPlaying)
-        rafIdRef.current = requestAnimationFrame(updateTime)
-    }
-
-    rafIdRef.current = requestAnimationFrame(updateTime)
-  }, [ state.audioEngine.isInitialized, state.audioEngine.isPlaying, state.audioEngine.isLooping, state.audioEngine.loopStartSamples, state.audioEngine.loopEndSamples, state.audioEngine.currentSamples, state.project.tracks, resumeAudioContext, setupAudioNodes, scheduleClip, samplesToSeconds, secondsToSamples ])
+    await audioEngineInstanceRef.current.startPlayback()
+  }, [])
 
   // Stop audio playback
   const stopPlayback = useCallback(() => {
-    if (rafIdRef.current) {
-      cancelAnimationFrame(rafIdRef.current)
-      rafIdRef.current = null
-    }
-
-    if (!audioContextRef.current)
-      return
-
-    // Update pausedAtSamplesRef to match current state
-    pausedAtSamplesRef.current = state.audioEngine.currentSamples
-
-    trackNodesRef.current.forEach(track => {
-      track.clipNodes.forEach(clip => {
-        try {
-          clip.source.stop()
-        }
-        catch (e) { /* ignore */ }
-      })
-      track.clipNodes.clear()
-    })
-  }, [ state.audioEngine.currentSamples ])
-
-  // Handle volume changes
-  useEffect(() => {
-    if (mainGainNodeRef.current)
-      mainGainNodeRef.current.gain.value = state.audioEngine.volume
-  }, [ state.audioEngine.volume ])
+    audioEngineInstanceRef.current?.stopPlayback()
+  }, [])
 
   // Handle play/pause state changes with proper effect
   useEffect(() => {
-    if (state.audioEngine.isInitialized) {
-      if (state.audioEngine.isPlaying)
-        startPlayback()
-      else
-        stopPlayback()
-    }
-
-    // Cleanup on unmount
-    return () => {
+    if (state.audioEngine.isPlaying)
+      startPlayback(); else
       stopPlayback()
-    }
-  }, [ state.audioEngine.isInitialized, state.audioEngine.isPlaying, startPlayback, stopPlayback ])
+  }, [ state.audioEngine.isPlaying, startPlayback, stopPlayback ])
 
-  // Handle seeking during playback - restart audio when currentSamples changes externally
-  useEffect(() => {
-    if (state.audioEngine.isPlaying && state.audioEngine.isInitialized) {
-      // Check if currentSamples was changed externally (not from our animation frame)
-      const samplesChanged = Math.abs(state.audioEngine.currentSamples - lastUpdateSamplesRef.current) > 1000 // ~20ms threshold
+  // Utility functions now proxy to AudioEngine methods
+  const samplesToSeconds = useCallback((samples: number): number => {
+    if (!audioEngineInstanceRef.current)
+      return 0
+    return audioEngineInstanceRef.current.samplesToSeconds(samples)
+  }, [])
 
-      if (samplesChanged) {
-        // User seeked during playback - restart from new position
-        console.log('Seek detected during playback, restarting from:', samplesToSeconds(state.audioEngine.currentSamples))
-        stopPlayback()
-        // Small delay to let audio context stabilize
-        setTimeout(() => {
-          if (state.audioEngine.isPlaying)
-            startPlayback()
-        }, 10)
-      }
-    }
-  }, [ state.audioEngine.currentSamples, state.audioEngine.isPlaying, state.audioEngine.isInitialized, startPlayback, stopPlayback, samplesToSeconds ])
+  const secondsToSamples = useCallback((seconds: number): number => {
+    if (!audioEngineInstanceRef.current)
+      return 0
+    return audioEngineInstanceRef.current.secondsToSamples(seconds)
+  }, [])
 
-  // Handle file selection
+  // Handle file selection (this logic remains in the context, as it dispatches state updates)
   const handleFilesSelected = (files: File[], trackId = '') => {
     const audioFiles = [ ...files ].filter(isSupportedAudioFile)
     if (audioFiles.length === 0)
@@ -728,14 +512,14 @@ export function AudioEngineProvider ({ children }: AudioEngineProviderProps) {
 
     dispatch({ type: 'ADD_PROCESSING_FILES', files: newProcessingFiles })
 
-    // Setup decoder message handler
+    // Setup decoder message handler (remains here as it interacts with local dispatch)
     const handleMessage = (event: { data: WorkerMessage }) => {
       const message = event.data
 
       switch (message.type) {
         case WorkerMessageType.AUDIO_DECODED: {
           if (message.audioBuffer && message.fileName && message.duration)
-            handleAudioDecoded(message.id, message.audioBuffer, message.fileName, message.duration, message.trackId)
+            handleAudioDecoded(message.id, message.audioBuffer, message.fileName, message.duration, message.trackId as string)
           break
         }
         case WorkerMessageType.DECODE_ERROR: {
@@ -845,7 +629,7 @@ export function AudioEngineProvider ({ children }: AudioEngineProviderProps) {
       if (state.fileProcessing.length <= 1)
         dispatch({ type: 'SET_PROCESSING', isProcessing: false })
     }, 1000)
-  }, [ state.project.tracks.length, state.fileProcessing.length, state.ui.dragState ])
+  }, [ state.project.tracks.length, state.fileProcessing.length, state.ui.dragState, dispatch ])
 
   const handleDecodeError = useCallback((id: string, error: string) => {
     console.error('Audio decode error:', error)
@@ -856,11 +640,11 @@ export function AudioEngineProvider ({ children }: AudioEngineProviderProps) {
       if (state.fileProcessing.length <= 1)
         dispatch({ type: 'SET_PROCESSING', isProcessing: false })
     }, 3000)
-  }, [ state.fileProcessing.length ])
+  }, [ state.fileProcessing.length, dispatch ])
 
   const handleWaveformGenerated = useCallback((id: string, waveformData: number[]) => {
     dispatch({ type: 'UPDATE_CLIP_WAVEFORM', clipId: id, waveformData })
-  }, [])
+  }, [ dispatch ])
 
   // Open file dialog
   const openFileDialog = useCallback(() => {
@@ -886,16 +670,16 @@ export function AudioEngineProvider ({ children }: AudioEngineProviderProps) {
     }
   }, [ handleFilesSelected ])
 
-  return <AudioEngineContext.Provider value={contextValue}>
+  return <AudioEngineContext.Provider value={ contextValue }>
     {children}
 
     <input
       type='file'
       accept='audio/*,.wav,.mp3,.m4a,.mp4,.ogg,.flac'
-      ref={fileInputRef}
-      multiple={true}
+      ref={ fileInputRef }
+      multiple={ true }
       style={{ display: 'none' }}
-      onChange={handleFileInputChange}
+      onChange={ handleFileInputChange }
     />
 
   </AudioEngineContext.Provider>

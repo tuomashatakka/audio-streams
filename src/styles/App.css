@@ -4,6 +4,7 @@
   flex-direction: column;
   background-color: var(--bg-primary);
   color: var(--text-primary);
+  pointer-events: none;
 }
 
 .app-header {
@@ -14,10 +15,17 @@
 }
 
 .app-header h1 {
-  margin: 0 0 8px 0;
-  color: var(--accent-primary);
-  font-size: var(--text-2xl);
-  font-weight: var(--font-bold);
+  color:                    var(--gradient-heading-start);
+  display:                  inline-block;
+  letter-spacing:           -0.1em;
+  font-size:                3em;
+  font-weight:              100;
+
+  background:               linear-gradient(135deg, var(--gradient-heading-start), var(--gradient-heading-mid), var(--gradient-heading-end));
+  background-clip:          text;
+  -webkit-background-clip:  text;
+  -webkit-text-fill-color:  transparent;
+  text-fill-color:          transparent;
 }
 
 .app-header p {
@@ -29,6 +37,7 @@
 .app-main {
   flex: 1;
   overflow: hidden;
+  pointer-events: all;
 }
 
 /* Responsive design */
@@ -36,11 +45,11 @@
   .app-header {
     padding: 12px 16px;
   }
-  
+
   .app-header h1 {
     font-size: var(--text-xl);
   }
-  
+
   .app-header p {
     font-size: var(--text-sm);
   }

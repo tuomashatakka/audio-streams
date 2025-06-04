@@ -92,66 +92,66 @@ function DropZone ({
   ].filter(Boolean).join(' ')
 
   return <div
-    className={dropZoneClasses}
-    onDragOver={handleDragOver}
-    onDragLeave={handleDragLeave}
-    onDrop={handleDrop}
-    onClick={handleClick}
+    className={ dropZoneClasses }
+    onDragOver={ handleDragOver }
+    onDragLeave={ handleDragLeave }
+    onDrop={ handleDrop }
+    onClick={ handleClick }
     role='button'
-    tabIndex={0}
+    tabIndex={ 0 }
     aria-label='Drop audio files here or click to select'>
 
     {/* Main drop zone content */}
     {!isProcessing && processingFiles.length === 0 &&
-        <div className='drop-zone-content'>
-          <div className='drop-zone-icon'>
-            {dropZoneState.isDragOver
-              ? <FileAudio size={48} />
-              : <Upload size={48} />
-            }
-          </div>
-
-          <div className='drop-zone-text'>
-            <h3>
-              {dropZoneState.isDragOver
-                ? 'Drop audio files here'
-                : 'Drop audio files or click to browse'
-              }
-            </h3>
-
-            <p>Supports WAV, MP3, M4A, OGG, and FLAC files</p>
-          </div>
+      <div className='drop-zone-content'>
+        <div className='drop-zone-icon'>
+          {dropZoneState.isDragOver
+            ? <FileAudio size={ 48 } />
+            : <Upload size={ 48 } />
+          }
         </div>
+
+        <div className='drop-zone-text'>
+          <h3>
+            {dropZoneState.isDragOver
+              ? 'Drop audio files here'
+              : 'Drop audio files or click to browse'
+            }
+          </h3>
+
+          <p>Supports WAV, MP3, M4A, OGG, and FLAC files</p>
+        </div>
+      </div>
     }
 
     {/* Processing state */}
     {(isProcessing || processingFiles.length > 0) &&
-        <div className='processing-content'>
-          <div className='processing-header'>
-            <div className='processing-spinner' />
-            <h3>Processing Audio Files</h3>
-          </div>
+    <div className='processing-content'>
+      <div className='processing-header'>
+        <div className='processing-spinner' />
+        <h3>Processing Audio Files</h3>
+      </div>
 
-          <div className='processing-files'>
-            {processingFiles.map(file =>
-              <div key={file.id} className={`processing-file ${file.status}`}>
-                <span className='file-name'>{file.fileName}</span>
+      <div className='processing-files'>
+        {processingFiles.map(file =>
+          <div key={ file.id } className={ `processing-file ${file.status}` }>
+            <span className='file-name'>{file.fileName}</span>
 
-                <span className='file-status'>
-                  {file.status === 'processing' && '⏳ Decoding...'}
-                  {file.status === 'completed' && '✅ Complete'}
-                  {file.status === 'error' && '❌ Error'}
-                </span>
-              </div>
-            )}
+            <span className='file-status'>
+              {file.status === 'processing' && '⏳ Decoding...'}
+              {file.status === 'completed' && '✅ Complete'}
+              {file.status === 'error' && '❌ Error'}
+            </span>
           </div>
-        </div>
+        )}
+      </div>
+    </div>
     }
 
     {/* Error message */}
     {dropZoneState.errorMessage &&
       <div className='error-message'>
-        <AlertCircle size={20} />
+        <AlertCircle size={ 20 } />
         <span>{dropZoneState.errorMessage}</span>
       </div>
     }

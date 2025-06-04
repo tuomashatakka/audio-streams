@@ -159,6 +159,7 @@ function MainAudioView () {
     // Cleanup on unmount
     return () => {
       hotkeysHandlerRef.current?.disable()
+      hotkeysHandlerRef.current = null
     }
   }, [])
 

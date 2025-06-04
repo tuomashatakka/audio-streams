@@ -10,8 +10,9 @@
   overflow: hidden;
   background: linear-gradient(135deg, var(--color, #3a86ff), var(--color, #3a86ff)dd);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  transition: all 40ms linear;
+  transition: transform 40ms linear;
   will-change: transform;
+  backdrop-filter: blur(4px);
 }
 
 .audio-clip:hover {
@@ -21,7 +22,7 @@
 
 .audio-clip.selected {
   border-color: #ff5500;
-  box-shadow: 0 0 0 2px rgba(255, 85, 0, 0.3);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1), 0 0 0 2px rgba(255, 85, 0, 0.3);
 }
 
 .audio-clip.dragging {

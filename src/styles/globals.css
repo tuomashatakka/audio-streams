@@ -3,92 +3,90 @@
  * Based on the design system and DAW-collab project patterns
  */
 
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@100..800&display=swap');
 @import './App.css' layer(elements);
 
 /* CSS Variables - Design System */
 :root {
-  /* Background Colors */
-  --bg-primary: #121212;
+  --bg-primary:   #121212;
   --bg-secondary: #1a1a1a;
-  --bg-tertiary: #2a2a2a;
+  --bg-tertiary:  #2a2a2a;
 
-  /* Interactive Colors */
-  --accent-primary: #ff5500;
-  --accent-primary-hover: #ff7733;
-  --accent-secondary: #3a86ff;
+  --accent-primary:         #ff0048;
+  --accent-primary-hover:   #f2289e;
+  --accent-secondary:       #3a86ff;
   --accent-secondary-hover: #619bff;
-  --accent-success: #38b000;
-  --accent-warning: #ffbe0b;
-  --accent-danger: #ff006e;
+  --accent-success:         #38b000;
+  --accent-warning:         #ffbe0b;
+  --accent-danger:          #ff006e;
 
-  /* Pastel Gradient Colors */
-  --gradient-primary-start: #ffb3d9;
-  --gradient-primary-mid: #ffc3a0;
-  --gradient-primary-end: #ffd4a3;
-  --gradient-heading-start: #a8e6cf;
-  --gradient-heading-mid: #b8e0d2;
-  --gradient-heading-end: #c8dbd4;
+  --gradient-primary-start: #f857a7;
+  --gradient-primary-mid:   #f9a271;
+  --gradient-primary-end:   #ffd4a3;
+  --gradient-heading-start: #13a5f9;
+  --gradient-heading-mid:   #9562f1;
+  --gradient-heading-end:   #ff1eb2;
 
   /* Text Colors */
-  --text-primary: #ffffff;
+  --text-primary:   #f3f2ef;
   --text-secondary: #dddddd;
-  --text-tertiary: #aaaaaa;
-  --text-inverse: #121212;
+  --text-tertiary:  #aaaaaa;
+  --text-inverse:   #121212;
 
   /* Borders & Dividers */
   --border-primary: rgba(255, 255, 255, 0.1);
-  --border-focus: var(--accent-primary);
-  --border-hover: rgba(255, 255, 255, 0.2);
+  --border-focus:   var(--accent-primary);
+  --border-hover:  rgba(255, 255, 255, 0.2);
 
   /* Audio-Specific Colors */
-  --waveform-color: #3a86ff;
+  --waveform-color:   #3a86ff;
   --waveform-inactive: rgba(58, 134, 255, 0.3);
-  --playhead-color: #ff5500;
-  --timeline-ruler: #666666;
-  --track-separator: var(--border-primary);
+  --playhead-color:   #ff5500;
+  --timeline-ruler:   #666666;
+  --track-separator:  var(--border-primary);
 
-  /* Typography */
-  --font-primary: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --font-mono: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", monospace;
+  --font-primary: Sora;
+  --font-base:    system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-sans:    var(--font-primary);
+  --font-mono:    "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", monospace, var(--font-base);
 
-  /* Font Sizes */
-  --text-xs: 10px;
-  --text-sm: 12px;
-  --text-base: 14px;
-  --text-lg: 16px;
-  --text-xl: 20px;
-  --text-2xl: 24px;
+  --base-size:      16px;
+  --text-xs:        10px;
+  --text-sm:        12px;
+  --text-base:      14px;
+  --text-lg:        16px;
+  --text-xl:        20px;
+  --text-2xl:       24px;
 
-  /* Font Weights */
-  --font-light: 100;
-  --font-normal: 300;
-  --font-medium: 400;
-  --font-semibold: 500;
-  --font-bold: 800;
+  --font-light:     100;
+  --font-normal:    300;
+  --font-medium:    400;
+  --font-semibold:  500;
+  --font-bold:      800;
 
   /* Spacing */
-  --space-0: 0;
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-5: 20px;
-  --space-6: 24px;
-  --space-8: 32px;
-  --space-10: 40px;
-  --space-12: 48px;
-  --space-16: 64px;
+  --space-0:        0;
+  --space-1:        4px;
+  --space-2:        8px;
+  --space-3:        12px;
+  --space-4:        16px;
+  --space-5:        20px;
+  --space-6:        24px;
+  --space-8:        32px;
+  --space-10:       40px;
+  --space-12:       48px;
+  --space-16:       64px;
 
   /* Audio Component Heights */
-  --track-height: 64px;
-  --timeline-height: 48px;
-  --toolbar-height: 56px;
-  --clip-min-width: 24px;
+  --track-height:     64px;
+  --timeline-height:  48px;
+  --toolbar-height:   56px;
+  --clip-min-width:   24px;
 
   /* Interactive Areas */
-  --touch-target: 44px;
-  --slider-height: 20px;
-  --button-height: 32px;
+  --touch-target:     44px;
+  --slider-height:    20px;
+  --button-height:    32px;
 
   /* Shadows */
   --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
@@ -105,31 +103,30 @@
 
   /* Transitions */
   --duration-instant: 0ms;
-  --duration-fast: 100ms;
-  --duration-normal: 200ms;
-  --duration-slow: 300ms;
-  --duration-slower: 500ms;
+  --duration-fast:    80ms;
+  --duration-normal:  160ms;
+  --duration-slow:    320ms;
+  --duration-slower:  480ms;
 
   /* Easing */
-  --ease-linear: linear;
-  --ease-in: cubic-bezier(0.4, 0, 1, 1);
-  --ease-out: cubic-bezier(0, 0, 0.2, 1);
-  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
-  --ease-spring: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  --ease-linear:  linear;
+  --ease-in:      cubic-bezier(0.4, 0, 1, 1);
+  --ease-out:     cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-out:  cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring:  cubic-bezier(0.68, -0.55, 0.265, 1.55);
 
   /* Common Transitions */
-  --transition-base: all var(--duration-normal) var(--ease-out);
-  --transition-colors: color var(--duration-fast) var(--ease-out),
-                       background-color var(--duration-fast) var(--ease-out);
+  --transition-base:      all var(--duration-normal) var(--ease-out);
+  --transition-colors:    color var(--duration-fast) var(--ease-out),
+                          background-color var(--duration-fast) var(--ease-out);
   --transition-transform: transform var(--duration-normal) var(--ease-out);
 }
 
-/* Base Reset */
 @layer reset {
   * {
     box-sizing: border-box;
-    margin: 0;
-    padding: 0;
+    margin:     0;
+    padding:    0;
   }
 
   *::before,
@@ -142,23 +139,27 @@
   }
 }
 
-/* Base Styles */
 @layer base {
   html {
-    font-size: 16px;
-    line-height: 1.5;
-    -webkit-font-smoothing: antialiased;
+    font-size:               var(--base-size);
+    font-weight:             var(--font-normal);
+    line-height:             1.5;
+    font-optical-sizing:     auto;
+    -webkit-font-smoothing:  antialiased;
     -moz-osx-font-smoothing: grayscale;
-    scroll-behavior: smooth;
+    scroll-behavior:         smooth;
+    font-style:              normal;
   }
 
   body {
-    font-family: var(--font-primary);
-    font-size: var(--text-base);
-    font-weight: var(--font-normal);
-    color: var(--text-primary);
+    font-family:      var(--font-sans);
+    font-size:        var(--text-base);
+    font-weight:      var(--font-normal);
+    color:            var(--text-primary);
     background-color: var(--bg-primary);
-    overflow-x: hidden;
+    overflow-x:       hidden;
+    width:            100%;
+    min-height:       100vh;
   }
 
   /* Responsive Design */
@@ -193,14 +194,7 @@
     margin: 0;
   }
 
-  h1 {
-    font-size: var(--text-2xl);
-    background: linear-gradient(135deg, var(--gradient-heading-start), var(--gradient-heading-mid), var(--gradient-heading-end));
-    background-clip: text;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    text-fill-color: transparent;
-  }
+  h1 { font-size: var(--text-2xl); }
   h2 { font-size: var(--text-xl); }
   h3 { font-size: var(--text-lg); }
   h4 { font-size: var(--text-base); }
@@ -614,14 +608,14 @@
 .timeline-container {
   display: block;
 }
-.timeline-svg-container {
-  margin-left: 420px;
+/* .timeline-svg-container {
+  padding-left: 420px;
 }
 .timeline-container.collapsed
 .timeline-svg-container {
   display: block;
-  margin-left: 20px;
-}
+  padding-left: 20px;
+} */
 
 
 .timeline-container {
