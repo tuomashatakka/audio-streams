@@ -1,22 +1,22 @@
 {
   "name": "audio-streams",
   "version": "1.0.0",
-  "description": "Web-based audio streaming and DAW module with Web Worker support",
+  "description": "Web-based audio streaming and DAW module with Web Worker support - Next.js Edition",
   "type": "module",
-  "main": "src/index.ts",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "build:app": "BUILD_MODE=app vite build",
-    "build:lib": "vite build",
-    "preview": "vite preview",
-    "lint": "eslint src --ext ts,tsx",
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "@auth/drizzle-adapter": "^1.9.1",
+    "drizzle-orm": "^0.44.2",
+    "lucide-react": "^0.462.0",
+    "next": "^15.0.0",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "lucide-react": "^0.462.0"
+    "react-dom": "^18.3.1"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
@@ -25,8 +25,8 @@
     "@types/node": "^22.15.23",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
-    "@vitejs/plugin-react": "^4.2.1",
     "eslint": "^9.27.0",
+    "eslint-config-next": "^15.0.0",
     "eslint-plugin-import": "^2.31.0",
     "eslint-plugin-no-inline-multiline-types": "^0.0.4",
     "eslint-plugin-omit-unnecessary": "^0.0.2",
@@ -35,8 +35,7 @@
     "eslint-plugin-whitespaced": "^1.0.0",
     "globals": "^16.1.0",
     "typescript": "^5.8.3",
-    "typescript-eslint": "^8.32.1",
-    "vite": "^5.4.19"
+    "typescript-eslint": "^8.32.1"
   },
   "keywords": [
     "audio",
@@ -45,6 +44,7 @@
     "streaming",
     "music",
     "react",
+    "nextjs",
     "typescript",
     "web-workers"
   ],
