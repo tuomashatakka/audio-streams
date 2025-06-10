@@ -249,7 +249,7 @@ export function secondsToSamples (seconds: number, sampleRate: number): number {
 }
 
 /**
- * Grid and timing utilities for audio editing hotkeys
+ * Grid and timing utilities for audio editing
  */
 
 // Grid sizes in note divisions
@@ -274,6 +274,17 @@ export function getGridDuration (
   gridSize: GridSize = GridSize.SIXTEENTH,
   timeSignature: { numerator: number; denominator: number } = { numerator: 4, denominator: 4 }
 ): number {
+  // Defensive programming - prevent NaN cascade
+  if (!bpm || isNaN(bpm) || bpm <= 0) {
+    console.warn('🎵 Invalid BPM in getGridDuration:', bpm, 'falling back to 120')
+    bpm = 120
+  }
+  
+  if (!gridSize || isNaN(gridSize) || gridSize <= 0) {
+    console.warn('🎵 Invalid gridSize in getGridDuration:', gridSize, 'falling back to SIXTEENTH')
+    gridSize = GridSize.SIXTEENTH
+  }
+
   // Duration of one beat in seconds
   const beatDuration = 60 / bpm
 
@@ -281,6 +292,11 @@ export function getGridDuration (
   // For quarter note grid: beatDuration / 1 = full beat
   // For sixteenth note grid: beatDuration / 4 = quarter beat
   const gridDuration = beatDuration / (gridSize / 4)
+
+  if (isNaN(gridDuration) || gridDuration <= 0) {
+    console.error('🎵 gridDuration calculation failed:', { bpm, gridSize, beatDuration, gridDuration })
+    return 0.125 // Fallback to reasonable sixteenth note duration at 120 BPM
+  }
 
   return gridDuration
 }
@@ -299,8 +315,64 @@ export function snapToGrid (
   gridSize: GridSize = GridSize.SIXTEENTH,
   timeSignature: { numerator: number; denominator: number } = { numerator: 4, denominator: 4 }
 ): number {
+  // Defensive programming - prevent NaN cascade
+  if (isNaN(time) || time === null || time === undefined) {
+    console.warn('🎵 Invalid time in snapToGrid:', time, 'returning 0')
+    return 0
+  }
+
   const gridDuration = getGridDuration(bpm, gridSize, timeSignature)
-  return Math.round(time / gridDuration) * gridDuration
+  
+  if (gridDuration <= 0) {
+    console.warn('🎵 Invalid grid duration in snapToGrid, returning original time')
+    return time
+  }
+  
+  const snapped = Math.round(time / gridDuration) * gridDuration
+  
+  if (isNaN(snapped)) {
+    console.error('🎵 snapToGrid produced NaN:', { time, gridDuration, snapped })
+    return time
+  }
+  
+  return snapped
+}
+
+/**
+ * Snap a pixel position to the grid based on pixels per second
+ * @param pixels Pixel position
+ * @param pixelsPerSecond Zoom level
+ * @param bpm Beats per minute
+ * @param gridSize Grid division
+ * @param timeSignature Time signature
+ * @returns Snapped pixel position
+ */
+export function snapPixelsToGrid (
+  pixels: number,
+  pixelsPerSecond: number,
+  bpm: number,
+  gridSize: GridSize = GridSize.SIXTEENTH,
+  timeSignature: { numerator: number; denominator: number } = { numerator: 4, denominator: 4 }
+): number {
+  const timeAtPixels = pixelsToTime(pixels, pixelsPerSecond)
+  const snappedTime = snapToGrid(timeAtPixels, bpm, gridSize, timeSignature)
+  return timeToPixels(snappedTime, pixelsPerSecond)
+}
+
+/**
+ * Calculate the nearest track position from a Y coordinate
+ * @param clientY Mouse Y position
+ * @param trackHeight Height of each track
+ * @param trackAreaTop Top position of tracks area
+ * @returns Track index (0-based)
+ */
+export function getTrackIndexFromY (
+  clientY: number,
+  trackHeight: number,
+  trackAreaTop: number
+): number {
+  const relativeY = clientY - trackAreaTop
+  return Math.max(0, Math.floor(relativeY / trackHeight))
 }
 
 /**
@@ -335,4 +407,55 @@ export function constrainTime (time: number, minTime: number = 0, maxTime?: numb
   if (maxTime !== undefined)
     constrainedTime = Math.min(maxTime, constrainedTime)
   return constrainedTime
+}
+
+/**
+ * Calculate drag delta and determine target track and snapped time
+ * @param startX Starting X position
+ * @param startY Starting Y position  
+ * @param currentX Current X position
+ * @param currentY Current Y position
+ * @param pixelsPerSecond Current zoom level
+ * @param bpm Project BPM
+ * @param trackHeight Height of each track
+ * @param timeSignature Project time signature
+ * @param gridSize Grid snap size
+ * @returns Calculated values for clip positioning
+ */
+export function calculateClipDragResult (
+  startX: number,
+  startY: number,
+  currentX: number,
+  currentY: number,
+  pixelsPerSecond: number,
+  bpm: number,
+  trackHeight: number,
+  timeSignature: { numerator: number; denominator: number } = { numerator: 4, denominator: 4 },
+  gridSize: GridSize = GridSize.SIXTEENTH
+): {
+  deltaX: number
+  deltaY: number
+  deltaTime: number
+  snappedDeltaTime: number
+  targetTrackDelta: number
+} {
+  const deltaX = currentX - startX
+  const deltaY = currentY - startY
+  
+  // Convert pixel delta to time delta
+  const deltaTime = pixelsToTime(deltaX, pixelsPerSecond)
+  
+  // Snap the time delta to grid
+  const snappedDeltaTime = snapToGrid(deltaTime, bpm, gridSize, timeSignature)
+  
+  // Calculate how many tracks we've moved
+  const targetTrackDelta = Math.round(deltaY / trackHeight)
+  
+  return {
+    deltaX,
+    deltaY, 
+    deltaTime,
+    snappedDeltaTime,
+    targetTrackDelta
+  }
 }

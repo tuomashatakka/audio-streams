@@ -4,10 +4,10 @@
 
 import { useCallback, useMemo, useRef } from 'react'
 import { AudioClip } from '../../types/audio'
-import { timeToPixels, formatTime } from '../../utils/audioUtils'
+import { timeToPixels, formatTime, snapToGrid, GridSize, pixelsToTime } from '../../utils/audioUtils'
+import { useAudioEngine } from '../../contexts/AudioEngineContext'
 import Waveform from '../waveform/Waveform'
 import './Clip.css'
-
 
 interface ClipProps {
   clip:            AudioClip
@@ -21,23 +21,25 @@ interface ClipProps {
   onMoveToTrack?:  (clipId: string, targetTrackId: string, newStartTime: number) => void
 }
 
-const useResizableAndPositionable = ({ onMove: _onMove, onResize: _onResize, onMouseUp }: Partial<ClipProps>) => {
-  const nodeRef     = useRef<HTMLDivElement>(null)
+const useResizableAndPositionable = ({ 
+  clip, 
+  pixelsPerSecond, 
+  onMove, 
+  onResize, 
+  onMoveToTrack 
+}: Partial<ClipProps> & { clip: AudioClip; pixelsPerSecond: number }) => {
+  const nodeRef = useRef<HTMLDivElement>(null)
   const modifyState = useRef({
-    width:  null,
+    width: null,
     action: null,
-    x:      null,
-    y:      null,
-    time:   null,
+    x: null,
+    y: null,
+    time: null,
     startX: null,
     startY: null,
   })
 
-  // Drag utility methods preserved for future implementation
-  // const clearModifyState = () => {
-  //   const box = nodeRef.current?.getBoundingClientRect()
-  //   return { x: box?.x, y: box?.y, width: box?.width, time: Date.now() }
-  // }
+  const { state } = useAudioEngine()
 
   // Handle drag/resize movement (visual only during drag)
   const handleMouseMove = (event: MouseEvent) => {
@@ -45,61 +47,123 @@ const useResizableAndPositionable = ({ onMove: _onMove, onResize: _onResize, onM
       return
 
     modifyState.current = {
-      startX: modifyState.current.startX,
-      startY: modifyState.current.startY,
-      x:      event.clientX,
-      y:      event.clientY,
-      width:  null,
+      ...modifyState.current,
+      x: event.clientX,
+      y: event.clientY,
       action: 'drag',
+      time: Date.now()
     }
 
     const deltaX = modifyState.current.x - modifyState.current.startX
     const deltaY = modifyState.current.y - modifyState.current.startY
 
-    console.log(modifyState.current)
-    if (nodeRef.current)
+    // Apply visual transform during drag
+    if (nodeRef.current) {
       nodeRef.current.style.setProperty('transform', `translate(${deltaX}px, ${deltaY}px)`)
+      nodeRef.current.style.setProperty('z-index', '1000')
+      nodeRef.current.classList.add('dragging')
+    }
   }
 
   // Handle drag/resize end (commit changes)
   const handleMouseUp = () => {
-
+    console.log('🎵 Clip mouseup fired!', { clipId: clip.id })
+    
     // Remove global event listeners
     document.removeEventListener('mousemove', handleMouseMove)
     document.removeEventListener('mouseup', handleMouseUp)
 
-    onMouseUp(modifyState)
+    // Calculate the changes
+    if (modifyState.current.startX !== null && modifyState.current.x !== null) {
+      const deltaX = modifyState.current.x - modifyState.current.startX
+      const deltaY = modifyState.current.y - modifyState.current.startY
+      
+      console.log('🎵 Calculating drag result:', { deltaX, deltaY, startTime: clip.startTime })
+      
+      // Convert pixel movement to time
+      const deltaTime = pixelsToTime(deltaX, pixelsPerSecond)
+      
+      // Apply grid snapping to the time delta
+      const snappedDeltaTime = snapToGrid(
+        deltaTime, 
+        state.project.bpm, 
+        GridSize.SIXTEENTH, 
+        state.project.timeSignature
+      )
+      
+      console.log('🎵 Time calculations:', { deltaTime, snappedDeltaTime, bpm: state.project.bpm })
+      
+      // Calculate new start time with snapping
+      const newStartTime = Math.max(0, clip.startTime + snappedDeltaTime)
+      
+      // Check for track movement
+      const h = nodeRef.current?.getBoundingClientRect().height / 2 || 0
+      const targetTrackId = getTargetTrackId(modifyState.current.y + h)
+      
+      console.log('🎵 Track detection:', { targetTrackId, currentTrackId: clip.trackId, newStartTime })
+      
+      if (targetTrackId && targetTrackId !== clip.trackId) {
+        console.log('🎵 Moving to different track!')
+        onMoveToTrack?.(clip.id, targetTrackId, newStartTime)
+      } else {
+        console.log('🎵 Moving on same track!')
+        onMove?.(clip.id, newStartTime)
+      }
+    } else {
+      console.log('🎵 No drag detected - positions were null')
+    }
 
-    if (nodeRef.current)
+    // Reset visual state
+    if (nodeRef.current) {
       nodeRef.current.style.transform = 'translate(0, 0)'
-    // clearModifyState() - removed for build convergence
+      nodeRef.current.style.zIndex = '100'
+      nodeRef.current.classList.remove('dragging')
+    }
 
+    // Clear state
     modifyState.current = {
-      x:      null,
-      y:      null,
-      width:  null,
+      x: null,
+      y: null,
+      width: null,
       action: null,
+      startX: null,
+      startY: null,
+      time: null,
     }
   }
 
-  // Handle drag start (currently unused but preserved for future implementation)
+  // Handle drag start
   const handleMouseDown = (event: React.MouseEvent) => {
-    console.log('onMouseDn', event.target)
+    console.log('🎵 Clip mousedown started!', { clipId: clip.id, clientX: event.clientX, clientY: event.clientY })
+    event.preventDefault()
+    event.stopPropagation()
+
     modifyState.current = {
       startX: event.clientX,
       startY: event.clientY,
-      x:      event.clientX,
-      y:      event.clientY,
-      width:  0,
+      x: event.clientX,
+      y: event.clientY,
+      width: 0,
       action: 'drag',
+      time: Date.now(),
     }
 
-    // event.preventDefault()
-    // event.stopPropagation()
-
-    // setDragStart()
     document.addEventListener('mousemove', handleMouseMove)
     document.addEventListener('mouseup', handleMouseUp)
+    console.log('🎵 Event listeners added for drag')
+  }
+
+  // Detect target track based on mouse position (restored from original)
+  const getTargetTrackId = (clientY: number): string | null => {
+    const trackElements = document.querySelectorAll('.audio-track')
+    for (const trackElement of trackElements) {
+      const rect = trackElement.getBoundingClientRect()
+      if (clientY >= rect.top && clientY <= rect.bottom) {
+        const trackId = trackElement.getAttribute('data-track-id')
+        return trackId
+      }
+    }
+    return null
   }
 
   return { handleMouseDown, nodeRef }
@@ -114,54 +178,47 @@ function Clip ({
   onSelect,
   onMove,
   onResize,
+  onMoveToTrack
 }: ClipProps) {
-  const onMoveToTrack = (modifyState) => {
-    const h = nodeRef.current?.getBoundingClientRect().height / 2
-    const tragetTrackId = getTargetTrackId(modifyState.current.y + h)
-    console.log(tragetTrackId)
-  }
-
-  const { handleMouseDown, nodeRef } = useResizableAndPositionable({ onMove, onResize, onMouseUp: onMoveToTrack })
+  const { handleMouseDown, nodeRef } = useResizableAndPositionable({ 
+    clip,
+    pixelsPerSecond,
+    onMove,
+    onResize,
+    onMoveToTrack
+  })
 
   const resolution = pixelsPerSecond / sampleRate
   const lengthInSamples = clip.duration * resolution
 
-  // Calculate clip dimensions (use temp values during drag/resize)
-  const clipHeight = useMemo(() => trackHeight - 4, [ trackHeight ])
-
-  // Detect target track based on mouse position
-  // Cross-track detection logic preserved for future implementation
-  const getTargetTrackId = (clientY: number): string | null => {
-    const trackElements = document.querySelectorAll('.audio-track')
-    for (const trackElement of trackElements) {
-      const rect = trackElement.getBoundingClientRect()
-      if (clientY >= rect.top && clientY <= rect.bottom) {
-        const trackId = trackElement.getAttribute('data-track-id')
-        return trackId
-      }
-    }
-    return null
-  }
+  // Calculate clip dimensions
+  const clipHeight = useMemo(() => trackHeight - 4, [trackHeight])
 
   // Handle clip selection
   const handleClick = useCallback((event: React.MouseEvent) => {
     event.stopPropagation()
     onSelect?.(clip.id)
-  }, [ clip.id, onSelect ])
+  }, [clip.id, onSelect])
+
+  // Calculate vertical position based on track index
+  const trackIndex = useAudioEngine().state.project.tracks.findIndex(t => t.id === clip.trackId)
+  const trackHeaderHeight = 40 // From Track.css
+  const topPosition = trackIndex * (trackHeight + 1) + trackHeaderHeight // +1 for border
 
   return <div
-    ref={ nodeRef }
-    onMouseDown={ handleMouseDown }
-    className={ `audio-clip` }
+    ref={nodeRef}
+    onMouseDown={handleMouseDown}
+    className={`audio-clip ${isSelected ? 'selected' : ''}`}
     style={{
       height:          `${clipHeight}px`,
       width:           `${lengthInSamples / resolution}px`,
       left:            `${timeToPixels(clip.startTime, pixelsPerSecond)}px`,
+      top:             `${topPosition}px`,
       backgroundColor: `${clip.color}40` || '#3a86ff40',
       borderColor:     isSelected ? `${clip.color}a0` : 'transparent'
     }}
-    onClick={ handleClick }
-    title={ `${clip.name} - ${formatTime(clip.duration)}` }
+    onClick={handleClick}
+    title={`${clip.name} - ${formatTime(clip.duration)}`}
   >
     {clip.isLoading
       ? <div className='clip-loading'>
@@ -171,10 +228,10 @@ function Clip ({
       : <>
         {clip.waveformData.length > 0 &&
           <Waveform
-            waveformData={ clip.waveformData }
-            width={ clip.duration * pixelsPerSecond }
-            height={ clipHeight }
-            color={ clip.color }
+            waveformData={clip.waveformData}
+            width={clip.duration * pixelsPerSecond}
+            height={clipHeight}
+            color={clip.color}
             className='clip-waveform'
           />
         }
@@ -189,6 +246,5 @@ function Clip ({
     }
   </div>
 }
-
 
 export default Clip

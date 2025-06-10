@@ -29,10 +29,34 @@
   cursor: grabbing;
   z-index: 1000;
   transform: rotate(2deg);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3), 0 0 0 2px rgba(255, 85, 0, 0.5);
+  opacity: 0.9;
+  transition: none; /* Disable transitions during drag for better performance */
 }
 
 .audio-clip.resizing {
   cursor: e-resize;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 85, 0, 0.3);
+}
+
+/* Grid snap feedback */
+.audio-clip.snap-preview {
+  outline: 2px dashed rgba(255, 85, 0, 0.6);
+  outline-offset: 2px;
+}
+
+/* Track hover states during drag */
+.track-hover-target {
+  background-color: rgba(255, 85, 0, 0.1) !important;
+  border: 2px dashed rgba(255, 85, 0, 0.4);
+}
+
+/* Enhanced selection state */
+.audio-clip.selected {
+  border-color: #ff5500;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1), 
+              0 0 0 2px rgba(255, 85, 0, 0.3),
+              0 0 8px rgba(255, 85, 0, 0.2);
 }
 
 /* Loading state */

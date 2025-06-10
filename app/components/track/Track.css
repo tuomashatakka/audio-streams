@@ -170,12 +170,15 @@
 .track-content {
   position: relative;
   overflow: visible;
+  /* This is the positioning context for clips! */
 }
 
 .track-lane {
   background-color: rgba(255, 255, 255, 0.02);
   position: relative;
   border-radius: 0 4px 4px 0;
+  /* Clips should be positioned relative to this */
+  z-index: 1;
 }
 
 .track-lane::before {

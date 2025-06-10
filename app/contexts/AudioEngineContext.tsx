@@ -5,7 +5,7 @@
 
 import { createContext, useContext, useRef, useReducer, useCallback, useEffect, ReactNode, PropsWithChildren } from 'react'
 import { AudioTrack, AudioClip, AudioProject, FileProcessingState, WorkerMessage, WorkerMessageType, TrackColor } from '../types/audio'
-import { generateId, getRandomTrackColor, sanitizeFileName, calculateProjectDuration, isSupportedAudioFile } from '../utils/audioUtils'
+import { generateId, getRandomTrackColor, sanitizeFileName, calculateProjectDuration, isSupportedAudioFile, snapToGrid, GridSize } from '../utils/audioUtils'
 import { audioDecoder } from '../utils/audioDecoder'
 import {
   createGainNode,
@@ -253,9 +253,24 @@ function appReducer (state: AppState, action: AppAction): AppState {
         }
       }
     case 'UPDATE_CLIP': {
-      const updatedClips = state.clips.map(clip =>
-        clip.id === action.clipId ? { ...clip, ...action.updates } : clip
-      )
+      const updatedClips = state.clips.map(clip => {
+        if (clip.id === action.clipId) {
+          const updates = { ...action.updates }
+          
+          // If updating startTime, snap it to grid
+          if (updates.startTime !== undefined) {
+            updates.startTime = snapToGrid(
+              updates.startTime, 
+              state.project.bpm, 
+              GridSize.SIXTEENTH, 
+              state.project.timeSignature
+            )
+          }
+          
+          return { ...clip, ...updates }
+        }
+        return clip
+      })
 
       // Recalculate duration
       const tracksWithClips = state.project.tracks.map(track => ({
@@ -346,10 +361,18 @@ function appReducer (state: AppState, action: AppAction): AppState {
         return track
       })
 
-      // Update clip with new track and start time
+      // Snap the new start time to grid
+      const snappedStartTime = snapToGrid(
+        action.newStartTime,
+        state.project.bpm,
+        GridSize.SIXTEENTH,
+        state.project.timeSignature
+      )
+
+      // Update clip with new track and snapped start time
       const updatedClips = state.clips.map(clip =>
         clip.id === action.clipId
-          ? { ...clip, trackId: action.targetTrackId, startTime: action.newStartTime }
+          ? { ...clip, trackId: action.targetTrackId, startTime: snappedStartTime }
           : clip
       )
 
@@ -571,6 +594,9 @@ export function AudioEngineProvider ({ children }: AudioEngineProviderProps) {
     const clipId   = generateId()
     const clipName = sanitizeFileName(fileName.replace(/\.[^/.]+$/, ''))
 
+    // Calculate grid-snapped start time (default to 0, but snap for visual consistency)
+    const snappedStartTime = snapToGrid(0, state.project.bpm, GridSize.SIXTEENTH, state.project.timeSignature)
+
     // Create the clip first
     const newClip: AudioClip = {
       id:           clipId,
@@ -578,7 +604,7 @@ export function AudioEngineProvider ({ children }: AudioEngineProviderProps) {
       trackId:      '', // Will be assigned when placed on track
       audioBuffer,
       waveformData: [],
-      startTime:    0,
+      startTime:    snappedStartTime,
       duration,
       volume:       1,
       pitch:        0,

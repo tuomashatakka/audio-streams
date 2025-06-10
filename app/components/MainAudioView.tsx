@@ -89,11 +89,15 @@ function MainAudioView () {
   }, [ dispatch ])
 
   const handleClipMove = useCallback((clipId: string, newStartTime: number) => {
-    dispatch({ type: 'UPDATE_CLIP', clipId, updates: { startTime: Math.max(0, newStartTime) }})
-  }, [ dispatch ])
+    // Constrain to valid bounds, let the reducer handle grid snapping
+    const constrainedTime = Math.max(0, Math.min(newStartTime, state.project.duration))
+    dispatch({ type: 'UPDATE_CLIP', clipId, updates: { startTime: constrainedTime }})
+  }, [ dispatch, state.project.duration ])
 
   const handleClipResize = useCallback((clipId: string, newDuration: number) => {
-    dispatch({ type: 'UPDATE_CLIP', clipId, updates: { duration: Math.max(0.1, newDuration) }})
+    // Ensure minimum duration
+    const constrainedDuration = Math.max(0.1, newDuration)
+    dispatch({ type: 'UPDATE_CLIP', clipId, updates: { duration: constrainedDuration }})
   }, [ dispatch ])
 
   const handleZoomChange = useCallback((newPixelsPerSecond: number) => {
@@ -271,7 +275,18 @@ function MainAudioView () {
           { state.project.tracks
             .flatMap(track => getTrackClips(track.id))
             .map(clip =>
-              <Clip clip={clip} key={clip.id} pixelsPerSecond={pixelsPerSecond} sampleRate={state.audioEngine.sampleRate} trackHeight={trackHeight} />)
+              <Clip 
+                key={clip.id}
+                clip={clip} 
+                pixelsPerSecond={pixelsPerSecond} 
+                sampleRate={state.audioEngine.sampleRate} 
+                trackHeight={trackHeight}
+                isSelected={state.ui.selectedClipId === clip.id}
+                onSelect={handleClipSelect}
+                onMove={handleClipMove}
+                onResize={handleClipResize}
+                onMoveToTrack={handleClipMoveToTrack}
+              />)
           }
 
           { state.project.tracks.map(track => {
