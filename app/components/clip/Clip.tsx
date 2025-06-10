@@ -7,7 +7,6 @@ import { AudioClip } from '../../types/audio'
 import { timeToPixels, formatTime } from '../../utils/audioUtils'
 import Waveform from '../waveform/Waveform'
 import './Clip.css'
-import { useAudioEngine } from '@/contexts/AudioEngineContext'
 
 
 interface ClipProps {
