@@ -30,7 +30,6 @@ interface TrackProps {
 }
 
 
-
 function Track ({
   track,
   pixelsPerSecond,

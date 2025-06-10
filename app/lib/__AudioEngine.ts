@@ -7,24 +7,24 @@ import {
 
 interface ClipNodes {
   source: AudioBufferSourceNode;
-  gain: GainNode;
+  gain:   GainNode;
   panner: StereoPannerNode;
 }
 
 interface TrackNodes {
-  gain: GainNode;
-  panner: StereoPannerNode;
+  gain:      GainNode;
+  panner:    StereoPannerNode;
   clipNodes: Map<string, ClipNodes>;
 }
 
 interface AudioEngineState {
-  isPlaying: boolean;
-  currentSamples: number;
-  isLooping: boolean;
+  isPlaying:        boolean;
+  currentSamples:   number;
+  isLooping:        boolean;
   loopStartSamples: number;
-  loopEndSamples: number;
-  volume: number;
-  sampleRate: number;
+  loopEndSamples:   number;
+  volume:           number;
+  sampleRate:       number;
 }
 
 interface AudioEngineProject {
@@ -35,22 +35,22 @@ type OnUpdateCurrentSamplesCallback = (samples: number) => void
 type OnAudioContextInitializedCallback = (sampleRate: number) => void
 
 export class AudioEngine {
-  private audioContext: AudioContext | null = null
-  private mainGainNode: GainNode | null = null
-  private trackNodes: Map<string, TrackNodes> = new Map()
-  private rafId: number | null = null
-  private startTime: number = 0
-  private pausedAtSamples: number = 0
+  private audioContext:      AudioContext | null = null
+  private mainGainNode:      GainNode | null = null
+  private trackNodes:        Map<string, TrackNodes> = new Map()
+  private rafId:             number | null = null
+  private startTime:         number = 0
+  private pausedAtSamples:   number = 0
   private lastUpdateSamples: number = 0
 
-  private onUpdateCurrentSamples: OnUpdateCurrentSamplesCallback
+  private onUpdateCurrentSamples:    OnUpdateCurrentSamplesCallback
   private onAudioContextInitialized: OnAudioContextInitializedCallback
 
-  private _state: AudioEngineState
-  private _project: AudioEngineProject
+  private _state:    AudioEngineState
+  private _project:  AudioEngineProject
   private _allClips: AudioClip[] = []
 
-  constructor(
+  constructor (
     initialState: AudioEngineState,
     initialProject: AudioEngineProject,
     onUpdateCurrentSamples: OnUpdateCurrentSamplesCallback,
@@ -62,10 +62,10 @@ export class AudioEngine {
     this.onAudioContextInitialized = onAudioContextInitialized
   }
 
-  public updateState(newState: AudioEngineState, newProject: AudioEngineProject, allClips: AudioClip[]): void {
+  public updateState (newState: AudioEngineState, newProject: AudioEngineProject, allClips: AudioClip[]): void {
     this._state = { ...newState }
     this._project = { ...newProject }
-    this._allClips = [...allClips]
+    this._allClips = [ ...allClips ]
 
     if (this.mainGainNode)
       this.mainGainNode.gain.value = this._state.volume
@@ -81,30 +81,30 @@ export class AudioEngine {
   }
 
   hasAudioContext () {
-    return !(!this.audioContext || (this.audioContext.state === 'suspended'))
+    return !(!this.audioContext || this.audioContext.state === 'suspended')
   }
 
-// ... existing code ...
+  // ... existing code ...
 
-public async initializeAudioContext(): Promise<boolean> {
-  if (!this.hasAudioContext()) {
-    this.audioContext = new AudioContext({ sampleRate: this._state.sampleRate });
-    this.mainGainNode = createGainNode(this.audioContext, this._state.volume);
-    this.mainGainNode.connect(this.audioContext.destination);
-    this.onAudioContextInitialized(this._state.sampleRate);
-    return true;
+  public async initializeAudioContext (): Promise<boolean> {
+    if (!this.hasAudioContext()) {
+      this.audioContext = new AudioContext({ sampleRate: this._state.sampleRate })
+      this.mainGainNode = createGainNode(this.audioContext, this._state.volume)
+      this.mainGainNode.connect(this.audioContext.destination)
+      this.onAudioContextInitialized(this._state.sampleRate)
+      return true
+    }
+    return false
   }
-  return false;
-}
 
-// ... existing code ...
-  public async resumeAudioContext(): Promise<boolean> {
+  // ... existing code ...
+  public async resumeAudioContext (): Promise<boolean> {
     this.audioContext?.resume()
   }
 
   getSource () {
     if (!this.audioContext)
-      throw new Error("ASD")
+      throw new Error('ASD')
 
     const arrayBuffer = this.audioContext.createBuffer(2, this.audioContext.sampleRate * 10, this.audioContext.sampleRate)
     const source = this.audioContext.createBufferSource()
@@ -122,10 +122,12 @@ public async initializeAudioContext(): Promise<boolean> {
     const analyserNode = this.audioContext.createAnalyser()
     const gainNode     = this.audioContext.createGain()
 
-    sourceNode.connect(gainNode).connect(analyserNode).connect(outputNode).connect(this.audioContext.destination)
+    sourceNode.connect(gainNode).connect(analyserNode)
+      .connect(outputNode)
+      .connect(this.audioContext.destination)
   }
 
-  private setupAudioNodes(): void {
+  private setupAudioNodes (): void {
     if (!this.audioContext || !this.mainGainNode)
       return
 
@@ -134,7 +136,9 @@ public async initializeAudioContext(): Promise<boolean> {
         try {
           clip.source.stop()
         }
-        catch (_e) { console.error(_e) }
+        catch (_e) {
+          console.error(_e)
+        }
         clip.source.disconnect()
         clip.gain.disconnect()
         clip.panner.disconnect()
@@ -156,38 +160,36 @@ public async initializeAudioContext(): Promise<boolean> {
     })
   }
 
-  private scheduleClip(clip: AudioClip, trackNodes: TrackNodes): void {
-    if (!this.audioContext || !clip.audioBuffer) {
-      return;
-    }
+  private scheduleClip (clip: AudioClip, trackNodes: TrackNodes): void {
+    if (!this.audioContext || !clip.audioBuffer)
+      return
 
-    const clipStartSamples = this.secondsToSamples(clip.startTime);
-    const currentSamplesOffset = this._state.currentSamples;
+    const clipStartSamples = this.secondsToSamples(clip.startTime)
+    const currentSamplesOffset = this._state.currentSamples
 
-    if (clipStartSamples + this.secondsToSamples(clip.duration) < currentSamplesOffset) {
-      return;
-    }
+    if (clipStartSamples + this.secondsToSamples(clip.duration) < currentSamplesOffset)
+      return
 
-    const source = createBufferSource(this.audioContext, clip.audioBuffer, Math.pow(2, clip.pitch / 12));
-    const gain = createGainNode(this.audioContext, clip.volume);
-    const panner = createStereoPanner(this.audioContext);
+    const source = createBufferSource(this.audioContext, clip.audioBuffer, Math.pow(2, clip.pitch / 12))
+    const gain = createGainNode(this.audioContext, clip.volume)
+    const panner = createStereoPanner(this.audioContext)
 
-    source.connect(gain);
-    gain.connect(panner);
-    panner.connect(trackNodes.gain);
+    source.connect(gain)
+    gain.connect(panner)
+    panner.connect(trackNodes.gain)
 
-    const startOffset = Math.max(0, this.samplesToSeconds(currentSamplesOffset - clipStartSamples));
-    const scheduleStartTime = this.audioContext.currentTime + Math.max(0, this.samplesToSeconds(clipStartSamples - currentSamplesOffset));
+    const startOffset = Math.max(0, this.samplesToSeconds(currentSamplesOffset - clipStartSamples))
+    const scheduleStartTime = this.audioContext.currentTime + Math.max(0, this.samplesToSeconds(clipStartSamples - currentSamplesOffset))
 
-    source.start(scheduleStartTime, startOffset);
-    trackNodes.clipNodes.set(clip.id, { source, gain, panner });
+    source.start(scheduleStartTime, startOffset)
+    trackNodes.clipNodes.set(clip.id, { source, gain, panner })
 
     source.onended = () => {
-      trackNodes.clipNodes.delete(clip.id);
-    };
-}
+      trackNodes.clipNodes.delete(clip.id)
+    }
+  }
 
-  private updateTime() {
+  private updateTime () {
     if (!this.audioContext || !this._state.isPlaying) {
       this.rafId = null
       return
@@ -223,87 +225,84 @@ public async initializeAudioContext(): Promise<boolean> {
       this.rafId = null
   }
 
-  public async startPlayback(): Promise<void> {
-    const isContextRunning = await this.resumeAudioContext();
-    if (!isContextRunning || !this.audioContext) {
-      return;
-    }
+  public async startPlayback (): Promise<void> {
+    const isContextRunning = await this.resumeAudioContext()
+    if (!isContextRunning || !this.audioContext)
+      return
 
-    const startFromSamples = this._state.currentSamples;
-    this.startTime = this.audioContext.currentTime - this.samplesToSeconds(startFromSamples);
-    this.lastUpdateSamples = startFromSamples;
+    const startFromSamples = this._state.currentSamples
+    this.startTime = this.audioContext.currentTime - this.samplesToSeconds(startFromSamples)
+    this.lastUpdateSamples = startFromSamples
 
-    this.setupAudioNodes();
+    this.setupAudioNodes()
 
-    this._project.tracks.forEach((track) => {
-      const trackNodes = this.trackNodes.get(track.id);
-      if (!trackNodes) {
-        return;
-      }
+    this._project.tracks.forEach(track => {
+      const trackNodes = this.trackNodes.get(track.id)
+      if (!trackNodes)
+        return
 
       const trackClips = track.clipIds
-        .map((clipId) => this._allClips.find((clip) => clip.id === clipId))
-        .filter(Boolean) as AudioClip[];
+        .map(clipId => this._allClips.find(clip => clip.id === clipId))
+        .filter(Boolean) as AudioClip[]
 
-      trackClips.forEach((clip) => {
-        this.scheduleClip(clip, trackNodes);
-      });
-    });
+      trackClips.forEach(clip => {
+        this.scheduleClip(clip, trackNodes)
+      })
+    })
 
-    if (this.rafId) {
-      cancelAnimationFrame(this.rafId);
-    }
+    if (this.rafId)
+      cancelAnimationFrame(this.rafId)
 
-    const updateTime = this.updateTime.bind(this);
-    this.rafId = requestAnimationFrame(updateTime);
+    const updateTime = this.updateTime.bind(this)
+    this.rafId = requestAnimationFrame(updateTime)
   }
 
-  public stopPlayback(): void {
+  public stopPlayback (): void {
     if (this.rafId) {
-      cancelAnimationFrame(this.rafId);
-      this.rafId = null;
+      cancelAnimationFrame(this.rafId)
+      this.rafId = null
     }
 
-    if (!this.audioContext) {
-      return;
-    }
+    if (!this.audioContext)
+      return
 
-    this.pausedAtSamples = this._state.currentSamples;
+    this.pausedAtSamples = this._state.currentSamples
 
-    this.trackNodes.forEach((track) => {
-      track.clipNodes.forEach((clip) => {
+    this.trackNodes.forEach(track => {
+      track.clipNodes.forEach(clip => {
         try {
-          clip.source.stop();
-        } catch (e) { console.error(e) }
-      });
-      track.clipNodes.clear();
-    });
+          clip.source.stop()
+        }
+        catch (e) {
+          console.error(e)
+        }
+      })
+      track.clipNodes.clear()
+    })
   }
 
-  public samplesToSeconds(samples: number): number {
+  public samplesToSeconds (samples: number): number {
     return samples / this._state.sampleRate
   }
 
-  public secondsToSamples(seconds: number): number {
+  public secondsToSamples (seconds: number): number {
     return Math.round(seconds * this._state.sampleRate)
   }
 
-  public getAudioContext(): AudioContext | null {
+  public getAudioContext (): AudioContext | null {
     return this.audioContext
   }
 
-  public dispose(): void {
+  public dispose (): void {
     if (this.rafId) {
-      cancelAnimationFrame(this.rafId);
-      this.rafId = null;
+      cancelAnimationFrame(this.rafId)
+      this.rafId = null
     }
-    if (this.audioContext && this.audioContext.state !== 'closed') {
-      this.audioContext.close();
-    }
-    this.audioContext = null;
-    this.mainGainNode = null;
-    this.trackNodes.clear();
-    console.log('AudioEngine disposed.');
+    if (this.audioContext && this.audioContext.state !== 'closed')
+      this.audioContext.close()
+    this.audioContext = null
+    this.mainGainNode = null
+    this.trackNodes.clear()
+    console.log('AudioEngine disposed.')
   }
-
 }

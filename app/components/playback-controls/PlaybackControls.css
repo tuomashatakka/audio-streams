@@ -42,7 +42,7 @@
 .transport-button:active {
   box-shadow: var(--shadow-xs);
   transform: translateY(.1px);
-  transition-duration: 40ms
+  transition-duration: 40ms;
 }
 
 .transport-button.play-pause {
@@ -50,7 +50,7 @@
   background-size: 240% 120%;
   width: 48px;
   height: 48px;
-  border: 4px solid rgba(0,0,0,0.5)
+  border: 4px solid rgba(0,0,0,0.5);
   color: var(--text-inverse);
   box-shadow: var(--shadow-md);
   background-position: -4px -4px;
@@ -72,7 +72,7 @@
 }
 
 .transport-button.stop {
-  background-image: linear-gradient(135deg, rgb(0, 207, 255), rgb(255, 0, 111))
+  background-image: linear-gradient(135deg, rgb(0, 207, 255), rgb(255, 0, 111));
 }
 
 .transport-button.loop.active {

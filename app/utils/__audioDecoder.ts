@@ -15,13 +15,13 @@ import {
 import { generateWaveformDataOffline } from './audioUtils'
 
 // Create offline audio context for decoding (doesn't require user gesture)
-function createOfflineContext(): OfflineAudioContext {
+function createOfflineContext (): OfflineAudioContext {
   // Create a minimal offline context for decoding
   return new OfflineAudioContext(2, 44100, 44100)
 }
 
 // Generate waveform data from AudioBuffer (fallback method)
-function generateWaveformData(audioBuffer: AudioBuffer, targetSamples = 1000): number[] {
+function generateWaveformData (audioBuffer: AudioBuffer, targetSamples = 1000): number[] {
   const channelData = audioBuffer.getChannelData(0) // Use first channel
   const samplesPerPixel = Math.floor(channelData.length / targetSamples)
   const waveformData: number[] = []
@@ -53,18 +53,18 @@ function generateWaveformData(audioBuffer: AudioBuffer, targetSamples = 1000): n
 export class AudioDecoder {
   private messageHandlers: Map<string, (message: any) => void> = new Map()
 
-  onMessage(handler: (message: any) => void): void {
+  onMessage (handler: (message: any) => void): void {
     const id = Math.random().toString(36)
     this.messageHandlers.set(id, handler)
   }
 
   // Remove message handler
-  removeMessageHandler(id: string): void {
+  removeMessageHandler (id: string): void {
     this.messageHandlers.delete(id)
   }
 
   // Post message (simulates worker postMessage)
-  private postMessage(message: any): void {
+  private postMessage (message: any): void {
     // Simulate async behavior like a real worker
     setTimeout(() => {
       this.messageHandlers.forEach(handler => handler({ data: message }))
@@ -72,7 +72,7 @@ export class AudioDecoder {
   }
 
   // Process message (simulates worker message handling)
-  async processMessage(message: WorkerMessage): Promise<void> {
+  async processMessage (message: WorkerMessage): Promise<void> {
     try {
       switch (message.type) {
         case WorkerMessageType.DECODE_AUDIO: {
@@ -87,18 +87,18 @@ export class AudioDecoder {
 
             // Send the decoded audio buffer back
             this.postMessage({
-              type: WorkerMessageType.AUDIO_DECODED,
+              type:       WorkerMessageType.AUDIO_DECODED,
               id,
               audioBuffer,
               fileName,
-              duration: audioBuffer.duration,
+              duration:   audioBuffer.duration,
               sampleRate: audioBuffer.sampleRate
             } as AudioDecodedMessage)
           }
           catch (error) {
             console.error('Audio decoding failed:', error)
             this.postMessage({
-              type: WorkerMessageType.DECODE_ERROR,
+              type:  WorkerMessageType.DECODE_ERROR,
               id,
               error: error instanceof Error ? error.message : 'Unknown decoding error'
             } as DecodeErrorMessage)
@@ -122,7 +122,7 @@ export class AudioDecoder {
           catch (error) {
             console.error('Waveform generation failed:', error)
             this.postMessage({
-              type: WorkerMessageType.DECODE_ERROR,
+              type:  WorkerMessageType.DECODE_ERROR,
               id,
               error: error instanceof Error ? error.message : 'Waveform generation failed'
             } as DecodeErrorMessage)
@@ -136,15 +136,15 @@ export class AudioDecoder {
     catch (error) {
       console.error('Audio decoder error:', error)
       this.postMessage({
-        type: WorkerMessageType.DECODE_ERROR,
-        id: (message as any).id || 'unknown',
+        type:  WorkerMessageType.DECODE_ERROR,
+        id:    (message as any).id || 'unknown',
         error: error instanceof Error ? error.message : 'Audio decoder processing error'
       } as DecodeErrorMessage)
     }
   }
 
   // Terminate (cleanup method)
-  terminate(): void {
+  terminate (): void {
     this.messageHandlers.clear()
   }
 }

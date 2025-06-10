@@ -97,7 +97,7 @@ export class AudioEngine {
     if (!this.audioContext)
       try {
         this.audioContext = new AudioContext({
-          sampleRate:   44100,
+          sampleRate:  44100,
           latencyHint: 'interactive',
         })
         this.mainGainNode = createGainNode(this.audioContext, this._state.volume)

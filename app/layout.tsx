@@ -4,31 +4,32 @@ import { Inter } from 'next/font/google'
 import './styles/base.css'
 
 
-const inter = Inter({ subsets: ['latin'] })
+const inter = Inter({ subsets: [ 'latin' ]})
 
 export const metadata: Metadata = {
-  title: 'Audio Streams - Web DAW Module',
+  title:       'Audio Streams - Web DAW Module',
   description: 'Web-based audio streaming and DAW module with drag-and-drop support and Web Worker-powered audio processing.',
-  keywords: ['audio', 'daw', 'web-audio', 'streaming', 'music', 'react', 'nextjs'],
-  authors: [{ name: 'Audio Streams Team' }],
-  creator: 'Audio Streams Team',
-  robots: {
-    index: true,
+  keywords:    [ 'audio', 'daw', 'web-audio', 'streaming', 'music', 'react', 'nextjs' ],
+  authors:     [{ name: 'Audio Streams Team' }],
+  creator:     'Audio Streams Team',
+  robots:      {
+    index:  true,
     follow: true,
   },
 }
 
-export default function RootLayout({
-  children,
-}: {
+type RootLayoutProps = {
   children: React.ReactNode
-}) {
-  return (
-    <html lang="en">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <style dangerouslySetInnerHTML={{
-          __html: `
+}
+
+export default function RootLayout ({
+  children,
+}: RootLayoutProps) {
+  return <html lang='en'>
+    <head>
+      <link rel='preconnect' href='https://fonts.googleapis.com' />
+      <style dangerouslySetInnerHTML={{
+        __html: `
             /* Critical CSS for initial load */
             @layer base {
               body {
@@ -76,11 +77,10 @@ export default function RootLayout({
               }
             }
           `
-        }} />
-      </head>
-      <body className={inter.className} suppressHydrationWarning>
-        {children}
-      </body>
-    </html>
-  )
+      }} />
+    </head>
+    <body className={ inter.className } suppressHydrationWarning>
+      {children}
+    </body>
+  </html>
 }

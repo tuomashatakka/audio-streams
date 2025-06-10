@@ -7,16 +7,16 @@ import { useCallback, useRef } from 'react'
 import { isSupportedAudioFile } from '@/utils/audioUtils'
 
 interface DropState {
-  isDragOver: boolean
-  dragType: 'file' | null
+  isDragOver:     boolean
+  dragType:       'file' | null
   hoveredElement: HTMLElement | null
 }
 
 interface UseDroppableOptions {
   onFilesDropped: (files: File[]) => void
-  onDragEnter?: (state: DropState) => void
-  onDragLeave?: (state: DropState) => void
-  onDragOver?: (state: DropState) => void
+  onDragEnter?:   (state: DropState) => void
+  onDragLeave?:   (state: DropState) => void
+  onDragOver?:    (state: DropState) => void
   acceptedTypes?: string[]
 }
 
@@ -24,21 +24,21 @@ interface UseDroppableReturn {
   dragProps: {
     onDragEnter: (event: React.DragEvent) => void
     onDragLeave: (event: React.DragEvent) => void
-    onDragOver: (event: React.DragEvent) => void
-    onDrop: (event: React.DragEvent) => void
+    onDragOver:  (event: React.DragEvent) => void
+    onDrop:      (event: React.DragEvent) => void
   }
   isDragOver: boolean
 }
 
-export function useDroppable({
+export function useDroppable ({
   onFilesDropped,
   onDragEnter,
   onDragLeave,
   onDragOver
 }: UseDroppableOptions): UseDroppableReturn {
   const dragStateRef = useRef<DropState>({
-    isDragOver: false,
-    dragType: null,
+    isDragOver:     false,
+    dragType:       null,
     hoveredElement: null
   })
 
@@ -51,13 +51,13 @@ export function useDroppable({
       return
 
     dragStateRef.current = {
-      isDragOver: true,
-      dragType: 'file',
+      isDragOver:     true,
+      dragType:       'file',
       hoveredElement: event.currentTarget as HTMLElement
     }
 
     onDragEnter?.(dragStateRef.current)
-  }, [onDragEnter])
+  }, [ onDragEnter ])
 
   const handleDragLeave = useCallback((event: React.DragEvent) => {
     event.preventDefault()
@@ -69,29 +69,29 @@ export function useDroppable({
 
     if (!currentTarget.contains(relatedTarget)) {
       dragStateRef.current = {
-        isDragOver: false,
-        dragType: null,
+        isDragOver:     false,
+        dragType:       null,
         hoveredElement: null
       }
 
       onDragLeave?.(dragStateRef.current)
     }
-  }, [onDragLeave])
+  }, [ onDragLeave ])
 
   const handleDragOver = useCallback((event: React.DragEvent) => {
     event.preventDefault()
     event.stopPropagation()
 
     onDragOver?.(dragStateRef.current)
-  }, [onDragOver])
+  }, [ onDragOver ])
 
   const handleDrop = useCallback((event: React.DragEvent) => {
     event.preventDefault()
     event.stopPropagation()
 
     dragStateRef.current = {
-      isDragOver: false,
-      dragType: null,
+      isDragOver:     false,
+      dragType:       null,
       hoveredElement: null
     }
 
@@ -102,14 +102,14 @@ export function useDroppable({
       onFilesDropped(audioFiles)
 
     onDragLeave?.(dragStateRef.current)
-  }, [onFilesDropped, onDragLeave])
+  }, [ onFilesDropped, onDragLeave ])
 
   return {
     dragProps: {
       onDragEnter: handleDragEnter,
       onDragLeave: handleDragLeave,
-      onDragOver: handleDragOver,
-      onDrop: handleDrop
+      onDragOver:  handleDragOver,
+      onDrop:      handleDrop
     },
     isDragOver: dragStateRef.current.isDragOver
   }

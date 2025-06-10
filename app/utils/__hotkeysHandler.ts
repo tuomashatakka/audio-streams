@@ -15,34 +15,34 @@ import { getGridDuration, GridSize, moveByGrid, constrainTime } from './audioUti
 
 export interface HotkeysConfig {
   // Clip manipulation
-  onNudgeLeft: (clipId: string, newStartTime: number) => void
-  onNudgeRight: (clipId: string, newStartTime: number) => void
-  onShortenClip: (clipId: string, newDuration: number) => void
+  onNudgeLeft:    (clipId: string, newStartTime: number) => void
+  onNudgeRight:   (clipId: string, newStartTime: number) => void
+  onShortenClip:  (clipId: string, newDuration: number) => void
   onLengthenClip: (clipId: string, newDuration: number) => void
 
   // Playback control
-  onTogglePlayback: () => void
+  onTogglePlayback:  () => void
   onRestartPlayback: () => void
 
   // State getters
-  getSelectedClip: () => AudioClip | null
-  getBPM: () => number
-  getTimeSignature: () => { numerator: number; denominator: number }
+  getSelectedClip:    () => AudioClip | null
+  getBPM:             () => number
+  getTimeSignature:   () => { numerator: number; denominator: number }
   getProjectDuration: () => number
-  isPlaying: () => boolean
+  isPlaying:          () => boolean
 }
 
 export class HotkeysHandler {
-  private config: HotkeysConfig
-  private isEnabled: boolean = false
+  private config:       HotkeysConfig
+  private isEnabled:    boolean = false
   private boundHandler: (event: KeyboardEvent) => void
 
-  constructor(config: HotkeysConfig) {
+  constructor (config: HotkeysConfig) {
     this.config = config
     this.boundHandler = this.handleKeyDown.bind(this)
   }
 
-  enable(): void {
+  enable (): void {
     if (this.isEnabled)
       return
 
@@ -54,7 +54,7 @@ export class HotkeysHandler {
   /**
    * Disable global hotkey listening
    */
-  disable(): void {
+  disable (): void {
     if (!this.isEnabled)
       return
 
@@ -66,14 +66,14 @@ export class HotkeysHandler {
   /**
    * Check if hotkeys are currently enabled
    */
-  get enabled(): boolean {
+  get enabled (): boolean {
     return this.isEnabled
   }
 
   /**
    * Main keyboard event handler
    */
-  private handleKeyDown(event: KeyboardEvent): void {
+  private handleKeyDown (event: KeyboardEvent): void {
     // Don't handle hotkeys when user is typing in inputs
     if (this.isInputFocused())
       return
@@ -112,7 +112,7 @@ export class HotkeysHandler {
   /**
    * Handle nudging selected clip to the left
    */
-  private handleNudgeLeft(): boolean {
+  private handleNudgeLeft (): boolean {
     const selectedClip = this.config.getSelectedClip()
     if (!selectedClip) {
       console.log('🎹 No clip selected for nudge left')
@@ -143,7 +143,7 @@ export class HotkeysHandler {
   /**
    * Handle nudging selected clip to the right
    */
-  private handleNudgeRight(): boolean {
+  private handleNudgeRight (): boolean {
     const selectedClip = this.config.getSelectedClip()
     if (!selectedClip) {
       console.log('🎹 No clip selected for nudge right')
@@ -174,7 +174,7 @@ export class HotkeysHandler {
   /**
    * Handle shortening selected clip
    */
-  private handleShortenClip(): boolean {
+  private handleShortenClip (): boolean {
     const selectedClip = this.config.getSelectedClip()
     if (!selectedClip) {
       console.log('🎹 No clip selected for shorten')
@@ -200,7 +200,7 @@ export class HotkeysHandler {
   /**
    * Handle lengthening selected clip
    */
-  private handleLengthenClip(): boolean {
+  private handleLengthenClip (): boolean {
     const selectedClip = this.config.getSelectedClip()
     if (!selectedClip) {
       console.log('🎹 No clip selected for lengthen')
@@ -227,7 +227,7 @@ export class HotkeysHandler {
   /**
    * Handle toggle playback
    */
-  private handleTogglePlayback(): boolean {
+  private handleTogglePlayback (): boolean {
     this.config.onTogglePlayback()
     console.log(`🎹 Toggled playback: ${this.config.isPlaying() ? 'playing' : 'paused'}`)
     return true
@@ -236,7 +236,7 @@ export class HotkeysHandler {
   /**
    * Handle restart playback from beginning
    */
-  private handleRestartPlayback(): boolean {
+  private handleRestartPlayback (): boolean {
     this.config.onRestartPlayback()
     console.log('🎹 Restarted playback from beginning')
     return true
@@ -245,7 +245,7 @@ export class HotkeysHandler {
   /**
    * Get current grid duration in seconds
    */
-  private getGridDuration(): number {
+  private getGridDuration (): number {
     return getGridDuration(
       this.config.getBPM(),
       GridSize.SIXTEENTH,
@@ -256,7 +256,7 @@ export class HotkeysHandler {
   /**
    * Check if an input element is currently focused
    */
-  private isInputFocused(): boolean {
+  private isInputFocused (): boolean {
     const activeElement = document.activeElement
     if (!activeElement)
       return false
@@ -271,17 +271,17 @@ export class HotkeysHandler {
   /**
    * Update the configuration (useful for changing handlers)
    */
-  updateConfig(newConfig: Partial<HotkeysConfig>): void {
+  updateConfig (newConfig: Partial<HotkeysConfig>): void {
     this.config = { ...this.config, ...newConfig }
   }
 
   /**
    * Get current grid info for debugging
    */
-  getGridInfo(): { duration: number; bpm: number; gridSize: string } {
+  getGridInfo (): { duration: number; bpm: number; gridSize: string } {
     return {
       duration: this.getGridDuration(),
-      bpm: this.config.getBPM(),
+      bpm:      this.config.getBPM(),
       gridSize: '1/16 note'
     }
   }

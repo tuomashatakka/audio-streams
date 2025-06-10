@@ -8,7 +8,7 @@ import { useCallback, useEffect } from 'react'
 import { AudioEngineProvider } from '@/contexts/AudioEngineContext'
 import MainAudioView from '@/components/MainAudioView'
 
-function AudioStreamsApp() {
+function AudioStreamsApp () {
   // Prevent pinch zoom in audio interface
   const usePreventPinchZoom = useCallback(() => {
     const handler = (e: WheelEvent) => {
@@ -25,20 +25,18 @@ function AudioStreamsApp() {
 
   usePreventPinchZoom()
 
-  return (
-    <div className="app">
-      <header className="app-header">
-        <h1>audioblocks</h1>
-        <p>audio-streams</p>
-      </header>
+  return <div className='app'>
+    <header className='app-header'>
+      <h1>audioblocks</h1>
+      <p>audio-streams</p>
+    </header>
 
-      <main className="app-main">
-        <AudioEngineProvider>
-          <MainAudioView />
-        </AudioEngineProvider>
-      </main>
-    </div>
-  )
+    <main className='app-main'>
+      <AudioEngineProvider>
+        <MainAudioView />
+      </AudioEngineProvider>
+    </main>
+  </div>
 }
 
 export default AudioStreamsApp

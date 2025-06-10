@@ -56,7 +56,7 @@ export interface AudioTrack {
   muted:   boolean
   solo:    boolean
   index:   number
-  clipIds: AudioClip[]
+  clipIds: string[]
 }
 
 // Audio project interface

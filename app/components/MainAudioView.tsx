@@ -108,6 +108,12 @@ function MainAudioView () {
     dispatch({ type: 'MOVE_CLIP_TO_TRACK', clipId, targetTrackId, newStartTime })
   }, [ dispatch ])
 
+  // Adapter function to bridge FileList → File[] for Track component
+  const handleTrackFileUpload = useCallback((files: FileList, _trackId: string) => {
+    const filesArray = Array.from(files)
+    handleFilesSelected(filesArray)
+  }, [ handleFilesSelected ])
+
   const onNudgeLeft    = () => handleClipMove(state.ui.selectedClipId || '', -0.1)
   const onNudgeRight   = () => handleClipMove(state.ui.selectedClipId || '', +0.1)
   const onShortenClip  = () => handleClipResize(state.ui.selectedClipId || '', -1)
@@ -283,7 +289,7 @@ function MainAudioView () {
               onClipResize={handleClipResize}
               onClipMoveToTrack={handleClipMoveToTrack}
               onTrackRemove={(trackId) => dispatch({ type: 'REMOVE_TRACK', trackId })}
-              onFileUpload={handleFilesSelected}
+              onFileUpload={handleTrackFileUpload}
               onTrackHover={handleTrackHover}
               isHovered={state.ui.dragState.hoveredTrackId === track.id}
               showPlaceholder={state.ui.dragState.isDragging && state.ui.dragState.dragType === 'file'}

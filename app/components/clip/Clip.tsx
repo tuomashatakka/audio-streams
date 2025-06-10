@@ -2,7 +2,7 @@
  * Audio Clip Component - represents a single audio clip on a track
  */
 
-import { useState, useCallback, useEffect, useMemo, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { AudioClip } from '../../types/audio'
 import { timeToPixels, formatTime } from '../../utils/audioUtils'
 import Waveform from '../waveform/Waveform'
@@ -26,7 +26,7 @@ const useResizableAndPositionable = ({ onMove, onResize, onMoveToTrack }: Partia
     width:  null,
     action: null,
     x:      null,
-    y:       null,
+    y:      null,
   })
 
   const clearModifyState = () => {
@@ -95,7 +95,6 @@ function Clip ({
   onResize,
   onMoveToTrack
 }: ClipProps) {
-
   const nodeRef = useResizableAndPositionable({ onMove, onResize, onMoveToTrack })
 
   const resolution = pixelsPerSecond / sampleRate
@@ -123,12 +122,12 @@ function Clip ({
     onSelect?.(clip.id)
   }, [ clip.id, onSelect ])
 
-  return <div ref={nodeRef}
+  return <div ref={ nodeRef }
     className={ `audio-clip` }
     style={{
       height:          `${clipHeight}px`,
-      width: `${lengthInSamples/resolution}px`,
-      left: `${timeToPixels(clip.startTime, pixelsPerSecond)}px`,
+      width:           `${lengthInSamples / resolution}px`,
+      left:            `${timeToPixels(clip.startTime, pixelsPerSecond)}px`,
       backgroundColor: `${clip.color}40` || '#3a86ff40',
       borderColor:     isSelected ? `${clip.color}a0` : 'transparent'
     }}
