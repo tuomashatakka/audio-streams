@@ -2,7 +2,7 @@
  * Audio Clip Component - represents a single audio clip on a track
  */
 
-import { useCallback, useEffect, useMemo, useRef } from 'react'
+import { useCallback, useMemo, useRef } from 'react'
 import { AudioClip } from '../../types/audio'
 import { timeToPixels, formatTime } from '../../utils/audioUtils'
 import Waveform from '../waveform/Waveform'
@@ -20,13 +20,16 @@ interface ClipProps {
   onMoveToTrack?:  (clipId: string, targetTrackId: string, newStartTime: number) => void
 }
 
-const useResizableAndPositionable = ({ onMove, onResize, onMoveToTrack }: Partial<ClipProps>) => {
+const useResizableAndPositionable = ({ onMove: _onMove, onResize: _onResize, onMoveToTrack: _onMoveToTrack }: Partial<ClipProps>) => {
   const nodeRef     = useRef<HTMLDivElement>(null)
   const modifyState = useRef({
     width:  null,
     action: null,
     x:      null,
     y:      null,
+    time:   null,
+    startX: null,
+    startY: null,
   })
 
   const clearModifyState = () => {
@@ -40,13 +43,16 @@ const useResizableAndPositionable = ({ onMove, onResize, onMoveToTrack }: Partia
   }
 
   const setDragStart = () => {
-    modifyState.current = { x: null, y: null, width: null, time: null }
+    modifyState.current = { x: null, y: null, width: null, time: null, action: null, startX: null, startY: null }
   }
 
   // Handle drag/resize movement (visual only during drag)
   const handleMouseMove = (event: MouseEvent) => {
-    const deltaX    = event.clientX - modifyState.current.startX
-    const deltaY    = event.clientY - modifyState.current.startY
+    if (modifyState.current.startX === null || modifyState.current.startY === null)
+      return
+
+    const deltaX = event.clientX - modifyState.current.startX
+    const deltaY = event.clientY - modifyState.current.startY
 
     if (nodeRef.current)
       nodeRef.current.style.transform = `translate(${deltaX}px, ${deltaY}px)`
@@ -68,8 +74,8 @@ const useResizableAndPositionable = ({ onMove, onResize, onMoveToTrack }: Partia
     clearModifyState()
   }
 
-  // Handle drag start
-  const handleMouseDown = (event: React.MouseEvent) => {
+  // Handle drag start (currently unused but preserved for future implementation)
+  const _handleMouseDown = (event: React.MouseEvent) => {
     if (event.target !== event.currentTarget)
       return // Ignore clicks on children
 

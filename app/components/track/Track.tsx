@@ -30,6 +30,7 @@ interface TrackProps {
 }
 
 
+// eslint-disable-next-line complexity
 function Track ({
   track,
   pixelsPerSecond,
