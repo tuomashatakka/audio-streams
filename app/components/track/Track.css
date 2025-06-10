@@ -1,0 +1,317 @@
+.audio-track {
+  display: flex;
+  flex-direction: column;
+  background-color: #1a1a1a;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  position: relative;
+}
+
+/* Track header */
+.track-header {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  background-color: #2a2a2a;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  min-height: 40px;
+  gap: 12px;
+  transition: all var(--duration-normal) var(--ease-out);
+  overflow: hidden;
+  position: relative;
+}
+
+.track-header.collapsed {
+  max-width: 20px;
+  padding: 8px 2px;
+  gap: 0;
+}
+
+.track-header.collapsed + .track-content {
+  margin-left: 20px;
+}
+
+.track-header.collapsed .track-name-input,
+.track-header.collapsed .track-controls {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.track-name-input {
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 4px 6px;
+  border-radius: 3px;
+  min-width: 80px;
+  max-width: 120px;
+}
+
+.track-name-input:focus {
+  outline: none;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Track controls */
+.track-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.track-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 4px;
+  color: #ffffff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.track-button:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.track-button.active {
+  background-color: #ff5500;
+  color: white;
+}
+
+.mute-button.active {
+  background-color: #ff006e;
+}
+
+.solo-button.active {
+  background-color: #ffbe0b;
+  color: #121212;
+}
+
+.remove-button {
+  background-color: rgba(255, 0, 110, 0.1);
+}
+
+.remove-button:hover {
+  background-color: rgba(255, 0, 110, 0.2);
+}
+
+.remove-button:active {
+  background-color: #ff006e;
+  color: white;
+}
+
+/* Sliders */
+.slider-container {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 80px;
+}
+
+.slider-label {
+  font-size: 10px;
+  color: #aaaaaa;
+  min-width: 20px;
+}
+
+.volume-slider,
+.pan-slider {
+  width: 50px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.volume-slider::-webkit-slider-thumb,
+.pan-slider::-webkit-slider-thumb {
+  width: 12px;
+  height: 12px;
+  background: #3a86ff;
+  border-radius: 50%;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  border: none;
+}
+
+.volume-slider::-moz-range-thumb,
+.pan-slider::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  background: #3a86ff;
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+}
+
+.volume-slider::-webkit-slider-thumb:hover,
+.pan-slider::-webkit-slider-thumb:hover {
+  background: #619bff;
+}
+
+.slider-value {
+  font-size: 9px;
+  color: #aaaaaa;
+  min-width: 25px;
+  text-align: center;
+}
+
+/* Track content */
+.track-content {
+  position: relative;
+  overflow: visible;
+}
+
+.track-lane {
+  background-color: rgba(255, 255, 255, 0.02);
+  position: relative;
+  border-radius: 0 4px 4px 0;
+}
+
+.track-lane::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent,
+    transparent 99px,
+    rgba(255, 255, 255, 0.05) 100px
+  );
+  pointer-events: none;
+}
+
+/* Responsive design */
+@media (max-width: 1024px) {
+  .track-header {
+    padding: 6px 8px;
+    gap: 8px;
+  }
+
+  .slider-container {
+    min-width: 60px;
+  }
+
+  .volume-slider,
+  .pan-slider {
+    width: 40px;
+  }
+
+  .track-name-input {
+    max-width: 100px;
+  }
+}
+
+/* Drag and drop styles */
+.audio-track.hovered {
+  background-color: rgba(255, 85, 0, 0.1);
+  border-color: #ff5500;
+}
+
+.audio-track.drag-target {
+  transition: all 0.2s ease;
+}
+
+.clip-placeholder {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border: 2px dashed #ff5500;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(255, 85, 0, 0.1);
+  z-index: 10;
+  animation: pulse 2s infinite;
+}
+
+.clip-placeholder .placeholder-content {
+  color: #ff5500;
+  font-weight: 500;
+  font-size: 12px;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+/* Empty track upload button */
+.empty-track-upload {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  transform: translate(0, -50%);
+  z-index: 5;
+}
+
+.upload-button {
+  background: linear-gradient(135deg, var(--gradient-primary-start), var(--gradient-primary-mid), var(--gradient-primary-end));
+  border: none;
+  color: var(--text-inverse);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  font-weight: var(--font-medium);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition-base);
+  border: none;
+  font-size: var(--text-sm);
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border-radius: 50%;
+  svg {
+    display: block;
+    width: 20px;
+    height: 20px;
+  }
+}
+
+.upload-button:focus,
+.upload-button:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+  filter: brightness(1.1);
+}
+
+@media (max-width: 768px) {
+  .track-header {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 8px;
+    gap: 6px;
+  }
+
+  .track-controls {
+    justify-content: space-between;
+    margin-left: 0;
+  }
+
+  .slider-container {
+    min-width: 50px;
+  }
+
+  .slider-value {
+    display: none;
+  }
+}

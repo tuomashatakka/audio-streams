@@ -1,11 +1,21 @@
-# Build for production
-npm run build
+# audioblocks/audio-streams
+
+to-be submodule for the audioblocks
 
 # Build as web app (for deployment)
 npm run build:app
 
-# Build as library (for npm package)
-npm run build:lib
+# Development env setup
+```
+git clone dlfkgnldgkhj --depth 1 ………
+
+$> bun i && bun dev
+
+
+[…prompt away…]
+⌠ git commit -m ':---)' && git push --no-verify --ff --force -u origin main
+⎮ [………]
+⌡ git add . && git commit -m "fix linting issues" && git push # <-- classic
 ```
 
 ## 🚀 Deployment
@@ -29,8 +39,3 @@ The project includes:
 - ✅ CORS headers for Web Audio API
 
 See [VERCEL_DEPLOYMENT.md](VERCEL_DEPLOYMENT.md) for detailed deployment guide.
-
-### Other Platforms
-- **Netlify**: Works with `npm run build:app`
-- **GitHub Pages**: Requires additional configuration for SPA routing
-- **Custom Server**: Serve the `dist/` folder as static files

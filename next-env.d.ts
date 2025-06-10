@@ -1,19 +1,5 @@
 /// <reference types="next" />
 /// <reference types="next/image-types/global" />
 
-// Web Worker type declarations
-declare module '*.worker.ts' {
-  class WebpackWorker extends Worker {
-    constructor()
-  }
-
-  export default WebpackWorker
-}
-
-declare module '*.worker.js' {
-  class WebpackWorker extends Worker {
-    constructor()
-  }
-
-  export default WebpackWorker
-}
+// NOTE: This file should not be edited
+// see https://nextjs.org/docs/app/api-reference/config/typescript for more information.

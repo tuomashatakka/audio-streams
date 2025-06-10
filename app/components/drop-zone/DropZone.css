@@ -1,0 +1,271 @@
+.drop-zone {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  padding: 32px;
+  border: 2px dashed rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.02);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  user-select: none;
+}
+
+.drop-zone:hover {
+  border-color: rgba(255, 85, 0, 0.5);
+  background-color: rgba(255, 85, 0, 0.05);
+}
+
+.drop-zone.drag-over {
+  border-color: #ff5500;
+  background-color: rgba(255, 85, 0, 0.1);
+  transform: scale(1.02);
+}
+
+.drop-zone.processing {
+  border-color: #3a86ff;
+  background-color: rgba(58, 134, 255, 0.05);
+  cursor: default;
+}
+
+.drop-zone.error {
+  border-color: #ff006e;
+  background-color: rgba(255, 0, 110, 0.05);
+}
+
+/* File input (hidden) */
+.file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  pointer-events: none;
+}
+
+/* Drop zone content */
+.drop-zone-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  text-align: center;
+}
+
+.drop-zone-icon {
+  color: #aaaaaa;
+  transition: all 0.3s ease;
+}
+
+.drop-zone.drag-over .drop-zone-icon {
+  color: #ff5500;
+  transform: scale(1.1);
+}
+
+.drop-zone-text h3 {
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 8px 0;
+}
+
+.drop-zone-text p {
+  color: #aaaaaa;
+  font-size: 14px;
+  margin: 0;
+}
+
+/* Processing content */
+.processing-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+}
+
+.processing-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.processing-header h3 {
+  color: #3a86ff;
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.processing-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(58, 134, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #3a86ff;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Processing files list */
+.processing-files {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  max-width: 400px;
+}
+
+.processing-file {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.processing-file.processing {
+  border-left: 3px solid #ffbe0b;
+}
+
+.processing-file.completed {
+  border-left: 3px solid #38b000;
+}
+
+.processing-file.error {
+  border-left: 3px solid #ff006e;
+}
+
+.file-name {
+  color: #ffffff;
+  font-weight: 500;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-right: 8px;
+}
+
+.file-status {
+  color: #aaaaaa;
+  font-size: 11px;
+  flex-shrink: 0;
+}
+
+/* Error message */
+.error-message {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background-color: rgba(255, 0, 110, 0.1);
+  border: 1px solid #ff006e;
+  border-radius: 4px;
+  color: #ff006e;
+  font-size: 12px;
+  animation: slideInUp 0.3s ease;
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .drop-zone {
+    min-height: 150px;
+    padding: 24px 16px;
+  }
+  
+  .drop-zone-text h3 {
+    font-size: 16px;
+  }
+  
+  .drop-zone-text p {
+    font-size: 13px;
+  }
+  
+  .processing-files {
+    max-width: 100%;
+  }
+  
+  .processing-file {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  
+  .file-status {
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .drop-zone {
+    min-height: 120px;
+    padding: 16px;
+  }
+  
+  .drop-zone-icon svg {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .drop-zone-text h3 {
+    font-size: 14px;
+  }
+  
+  .drop-zone-text p {
+    font-size: 12px;
+  }
+}
+
+/* Focus styles for accessibility */
+.drop-zone:focus {
+  outline: 2px solid #ff5500;
+  outline-offset: 2px;
+}
+
+/* Animation for successful drop */
+.drop-zone.success {
+  animation: successPulse 0.6s ease;
+}
+
+@keyframes successPulse {
+  0% {
+    border-color: #38b000;
+    background-color: rgba(56, 176, 0, 0.1);
+  }
+  50% {
+    border-color: #38b000;
+    background-color: rgba(56, 176, 0, 0.2);
+    transform: scale(1.02);
+  }
+  100% {
+    border-color: rgba(255, 255, 255, 0.2);
+    background-color: rgba(255, 255, 255, 0.02);
+    transform: scale(1);
+  }
+}

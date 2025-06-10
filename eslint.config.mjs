@@ -251,7 +251,7 @@ const config =
       ],
     },
     files:           [
-      'src/**/*.{js,jsx,mjs,cjs,ts,tsx}',
+      'app/**/*.{js,jsx,mjs,cjs,ts,tsx}',
       'eslint.config.mjs',
     ],
     languageOptions: {

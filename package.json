@@ -4,10 +4,11 @@
   "description": "Web-based audio streaming and DAW module with Web Worker support - Next.js Edition",
   "type": "module",
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --turbo",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "lint:fix": "next lint --fix && node scripts/fix-returns.mjs",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
