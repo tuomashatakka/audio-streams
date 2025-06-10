@@ -5,7 +5,6 @@
 import { useCallback } from 'react'
 import { AudioTrack as AudioTrackType } from '../../types/audio'
 import { timeToPixels } from '../../utils/audioUtils'
-import Clip from '../clip/Clip'
 import { Volume2, VolumeX, Headphones, Trash2, Upload } from 'lucide-react'
 import './Track.css'
 
@@ -13,6 +12,7 @@ import './Track.css'
 interface TrackProps {
   track:              AudioTrackType
   pixelsPerSecond:    number
+  sampleRate:         number
   trackHeight:        number
   projectDuration:    number
   selectedClipId?:    string | null
@@ -34,6 +34,7 @@ interface TrackProps {
 function Track ({
   track,
   pixelsPerSecond,
+  sampleRate,
   trackHeight,
   projectDuration,
   selectedClipId,
@@ -198,20 +199,8 @@ function Track ({
         }}
       />
 
-      {/* Audio clips */}
-      {track.clipIds.map(clip =>
-        <Clip
-          key={ clip.id }
-          clip={ clip }
-          pixelsPerSecond={ pixelsPerSecond }
-          trackHeight={ trackHeight }
-          isSelected={ selectedClipId === clip.id }
-          onSelect={ onClipSelect }
-          onMove={ onClipMove }
-          onResize={ onClipResize }
-          onMoveToTrack={ onClipMoveToTrack }
-        />
-      )}
+      {/* Audio clips are rendered by MainAudioView to handle normalized state properly */}
+      {/* Track component focuses on track-level controls and layout */}
 
       {/* Upload button for empty tracks */}
       {track.clipIds.length === 0 && !isHovered &&

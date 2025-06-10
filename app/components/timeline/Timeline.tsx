@@ -60,8 +60,8 @@ export default function Timeline ({
       minorInterval = 0.5
     }
 
-    const timeMarkers = []
-    const beatMarkers = []
+    const timeMarkers: Array<{ x: number; time: number; isMajor: boolean; label: string | null }> = []
+    const beatMarkers: Array<{ x: number; isBarStart: boolean }> = []
 
     // Generate time markers
     for (let time = 0; time <= duration; time += minorInterval) {

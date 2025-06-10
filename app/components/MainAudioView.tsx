@@ -271,7 +271,7 @@ function MainAudioView () {
           { state.project.tracks
             .flatMap(track => getTrackClips(track.id))
             .map(clip =>
-              <Clip clip={clip} key={clip.id} pixelsPerSecond={pixelsPerSecond} trackHeight={trackHeight} />)
+              <Clip clip={clip} key={clip.id} pixelsPerSecond={pixelsPerSecond} sampleRate={state.audioEngine.sampleRate} trackHeight={trackHeight} />)
           }
 
           { state.project.tracks.map(track => {
@@ -279,6 +279,7 @@ function MainAudioView () {
               key={track.id}
               track={{ ...track }}
               pixelsPerSecond={state.ui.pixelsPerSecond}
+              sampleRate={state.audioEngine.sampleRate}
               trackHeight={64}
               projectDuration={projectDuration}
               selectedClipId={state.ui.selectedClipId}
