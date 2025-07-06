@@ -21,20 +21,30 @@ interface ClipProps {
   onMoveToTrack?:  (clipId: string, targetTrackId: string, newStartTime: number) => void
 }
 
-const useResizableAndPositionable = ({ 
-  clip, 
-  pixelsPerSecond, 
-  onMove, 
-  onResize, 
-  onMoveToTrack 
+type ModifyState = {
+  x:      number | null
+  y:      number | null
+  width:  number | null
+  action: 'drag' | 'resize' | null
+  startX: number | null
+  startY: number | null
+  time:   number | null
+}
+
+const useResizableAndPositionable = ({
+  clip,
+  pixelsPerSecond,
+  onMove,
+  onResize,
+  onMoveToTrack
 }: Partial<ClipProps> & { clip: AudioClip; pixelsPerSecond: number }) => {
   const nodeRef = useRef<HTMLDivElement>(null)
-  const modifyState = useRef({
-    width: null,
+  const modifyState = useRef<ModifyState>({
+    width:  null,
     action: null,
-    x: null,
-    y: null,
-    time: null,
+    x:      null,
+    y:      null,
+    time:   null,
     startX: null,
     startY: null,
   })
@@ -48,10 +58,10 @@ const useResizableAndPositionable = ({
 
     modifyState.current = {
       ...modifyState.current,
-      x: event.clientX,
-      y: event.clientY,
+      x:      event.clientX,
+      y:      event.clientY,
       action: 'drag',
-      time: Date.now()
+      time:   Date.now()
     }
 
     const deltaX = modifyState.current.x - modifyState.current.startX
@@ -68,7 +78,7 @@ const useResizableAndPositionable = ({
   // Handle drag/resize end (commit changes)
   const handleMouseUp = () => {
     console.log('🎵 Clip mouseup fired!', { clipId: clip.id })
-    
+
     // Remove global event listeners
     document.removeEventListener('mousemove', handleMouseMove)
     document.removeEventListener('mouseup', handleMouseUp)
@@ -77,41 +87,42 @@ const useResizableAndPositionable = ({
     if (modifyState.current.startX !== null && modifyState.current.x !== null) {
       const deltaX = modifyState.current.x - modifyState.current.startX
       const deltaY = modifyState.current.y - modifyState.current.startY
-      
+
       console.log('🎵 Calculating drag result:', { deltaX, deltaY, startTime: clip.startTime })
-      
+
       // Convert pixel movement to time
       const deltaTime = pixelsToTime(deltaX, pixelsPerSecond)
-      
+
       // Apply grid snapping to the time delta
       const snappedDeltaTime = snapToGrid(
-        deltaTime, 
-        state.project.bpm, 
-        GridSize.SIXTEENTH, 
+        deltaTime,
+        state.project.bpm,
+        GridSize.SIXTEENTH,
         state.project.timeSignature
       )
-      
+
       console.log('🎵 Time calculations:', { deltaTime, snappedDeltaTime, bpm: state.project.bpm })
-      
+
       // Calculate new start time with snapping
       const newStartTime = Math.max(0, clip.startTime + snappedDeltaTime)
-      
+
       // Check for track movement
       const h = nodeRef.current?.getBoundingClientRect().height / 2 || 0
       const targetTrackId = getTargetTrackId(modifyState.current.y + h)
-      
+
       console.log('🎵 Track detection:', { targetTrackId, currentTrackId: clip.trackId, newStartTime })
-      
+
       if (targetTrackId && targetTrackId !== clip.trackId) {
         console.log('🎵 Moving to different track!')
         onMoveToTrack?.(clip.id, targetTrackId, newStartTime)
-      } else {
+      }
+      else {
         console.log('🎵 Moving on same track!')
         onMove?.(clip.id, newStartTime)
       }
-    } else {
-      console.log('🎵 No drag detected - positions were null')
     }
+    else
+      console.log('🎵 No drag detected - positions were null')
 
     // Reset visual state
     if (nodeRef.current) {
@@ -122,13 +133,13 @@ const useResizableAndPositionable = ({
 
     // Clear state
     modifyState.current = {
-      x: null,
-      y: null,
-      width: null,
+      x:      null,
+      y:      null,
+      width:  null,
       action: null,
       startX: null,
       startY: null,
-      time: null,
+      time:   null,
     }
   }
 
@@ -141,11 +152,11 @@ const useResizableAndPositionable = ({
     modifyState.current = {
       startX: event.clientX,
       startY: event.clientY,
-      x: event.clientX,
-      y: event.clientY,
-      width: 0,
+      x:      event.clientX,
+      y:      event.clientY,
+      width:  0,
       action: 'drag',
-      time: Date.now(),
+      time:   Date.now(),
     }
 
     document.addEventListener('mousemove', handleMouseMove)
@@ -158,6 +169,7 @@ const useResizableAndPositionable = ({
     const trackElements = document.querySelectorAll('.audio-track')
     for (const trackElement of trackElements) {
       const rect = trackElement.getBoundingClientRect()
+      console.log(rect)
       if (clientY >= rect.top && clientY <= rect.bottom) {
         const trackId = trackElement.getAttribute('data-track-id')
         return trackId
@@ -180,7 +192,7 @@ function Clip ({
   onResize,
   onMoveToTrack
 }: ClipProps) {
-  const { handleMouseDown, nodeRef } = useResizableAndPositionable({ 
+  const { handleMouseDown, nodeRef } = useResizableAndPositionable({
     clip,
     pixelsPerSecond,
     onMove,
@@ -192,13 +204,13 @@ function Clip ({
   const lengthInSamples = clip.duration * resolution
 
   // Calculate clip dimensions
-  const clipHeight = useMemo(() => trackHeight - 4, [trackHeight])
+  const clipHeight = useMemo(() => trackHeight - 4, [ trackHeight ])
 
   // Handle clip selection
   const handleClick = useCallback((event: React.MouseEvent) => {
     event.stopPropagation()
     onSelect?.(clip.id)
-  }, [clip.id, onSelect])
+  }, [ clip.id, onSelect ])
 
   // Calculate vertical position based on track index
   const trackIndex = useAudioEngine().state.project.tracks.findIndex(t => t.id === clip.trackId)
@@ -206,9 +218,9 @@ function Clip ({
   const topPosition = trackIndex * (trackHeight + 1) + trackHeaderHeight // +1 for border
 
   return <div
-    ref={nodeRef}
-    onMouseDown={handleMouseDown}
-    className={`audio-clip ${isSelected ? 'selected' : ''}`}
+    ref={ nodeRef }
+    onMouseDown={ handleMouseDown }
+    className={ `audio-clip ${isSelected ? 'selected' : ''}` }
     style={{
       height:          `${clipHeight}px`,
       width:           `${lengthInSamples / resolution}px`,
@@ -217,8 +229,8 @@ function Clip ({
       backgroundColor: `${clip.color}40` || '#3a86ff40',
       borderColor:     isSelected ? `${clip.color}a0` : 'transparent'
     }}
-    onClick={handleClick}
-    title={`${clip.name} - ${formatTime(clip.duration)}`}
+    onClick={ handleClick }
+    title={ `${clip.name} - ${formatTime(clip.duration)}` }
   >
     {clip.isLoading
       ? <div className='clip-loading'>
@@ -228,10 +240,10 @@ function Clip ({
       : <>
         {clip.waveformData.length > 0 &&
           <Waveform
-            waveformData={clip.waveformData}
-            width={clip.duration * pixelsPerSecond}
-            height={clipHeight}
-            color={clip.color}
+            waveformData={ clip.waveformData }
+            width={ clip.duration * pixelsPerSecond }
+            height={ clipHeight }
+            color={ clip.color }
             className='clip-waveform'
           />
         }

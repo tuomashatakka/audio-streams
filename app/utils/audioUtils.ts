@@ -279,7 +279,7 @@ export function getGridDuration (
     console.warn('🎵 Invalid BPM in getGridDuration:', bpm, 'falling back to 120')
     bpm = 120
   }
-  
+
   if (!gridSize || isNaN(gridSize) || gridSize <= 0) {
     console.warn('🎵 Invalid gridSize in getGridDuration:', gridSize, 'falling back to SIXTEENTH')
     gridSize = GridSize.SIXTEENTH
@@ -322,19 +322,19 @@ export function snapToGrid (
   }
 
   const gridDuration = getGridDuration(bpm, gridSize, timeSignature)
-  
+
   if (gridDuration <= 0) {
     console.warn('🎵 Invalid grid duration in snapToGrid, returning original time')
     return time
   }
-  
+
   const snapped = Math.round(time / gridDuration) * gridDuration
-  
+
   if (isNaN(snapped)) {
     console.error('🎵 snapToGrid produced NaN:', { time, gridDuration, snapped })
     return time
   }
-  
+
   return snapped
 }
 
@@ -412,7 +412,7 @@ export function constrainTime (time: number, minTime: number = 0, maxTime?: numb
 /**
  * Calculate drag delta and determine target track and snapped time
  * @param startX Starting X position
- * @param startY Starting Y position  
+ * @param startY Starting Y position
  * @param currentX Current X position
  * @param currentY Current Y position
  * @param pixelsPerSecond Current zoom level
@@ -422,6 +422,14 @@ export function constrainTime (time: number, minTime: number = 0, maxTime?: numb
  * @param gridSize Grid snap size
  * @returns Calculated values for clip positioning
  */
+type CalculateClipDragResultReturnType = {
+  deltaX:           number
+  deltaY:           number
+  deltaTime:        number
+  snappedDeltaTime: number
+  targetTrackDelta: number
+}
+
 export function calculateClipDragResult (
   startX: number,
   startY: number,
@@ -432,28 +440,22 @@ export function calculateClipDragResult (
   trackHeight: number,
   timeSignature: { numerator: number; denominator: number } = { numerator: 4, denominator: 4 },
   gridSize: GridSize = GridSize.SIXTEENTH
-): {
-  deltaX: number
-  deltaY: number
-  deltaTime: number
-  snappedDeltaTime: number
-  targetTrackDelta: number
-} {
+): CalculateClipDragResultReturnType {
   const deltaX = currentX - startX
   const deltaY = currentY - startY
-  
+
   // Convert pixel delta to time delta
   const deltaTime = pixelsToTime(deltaX, pixelsPerSecond)
-  
+
   // Snap the time delta to grid
   const snappedDeltaTime = snapToGrid(deltaTime, bpm, gridSize, timeSignature)
-  
+
   // Calculate how many tracks we've moved
   const targetTrackDelta = Math.round(deltaY / trackHeight)
-  
+
   return {
     deltaX,
-    deltaY, 
+    deltaY,
     deltaTime,
     snappedDeltaTime,
     targetTrackDelta

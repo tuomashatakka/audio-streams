@@ -566,15 +566,6 @@
 
 
 
-
-  .track-header {
-    position: absolute;
-    left: 0;
-    z-index: 10;
-    bottom: 0;
-    top: 0;
-    width: 420px;
-  }
   .track-content {
     margin-left: 420px;
   }

@@ -17,7 +17,12 @@
   gap: 12px;
   transition: all var(--duration-normal) var(--ease-out);
   overflow: hidden;
-  position: relative;
+  position: absolute;
+  left: 0;
+  z-index: 10;
+  bottom: 0;
+  top: 0;
+  width: 420px;
 }
 
 .track-header.collapsed {

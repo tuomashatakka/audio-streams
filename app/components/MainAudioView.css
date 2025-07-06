@@ -55,8 +55,8 @@
 /* Tracks container - handles vertical scrolling */
 .tracks-container {
   flex: 1;
-  display: flex;
-  flex-direction: column;
+  display: block;
+  position: relative;
   overflow-y: auto;
   overflow-x: visible; /* Let the parent handle horizontal scrolling */
   background-color: #1a1a1a;

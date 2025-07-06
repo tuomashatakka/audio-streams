@@ -120,6 +120,7 @@ const initialState: AppState = {
 
 // Reducer function
 
+// eslint-disable-next-line complexity
 function appReducer (state: AppState, action: AppAction): AppState {
   switch (action.type) {
     case 'INITIALIZE_AUDIO_CONTEXT':
@@ -256,17 +257,16 @@ function appReducer (state: AppState, action: AppAction): AppState {
       const updatedClips = state.clips.map(clip => {
         if (clip.id === action.clipId) {
           const updates = { ...action.updates }
-          
+
           // If updating startTime, snap it to grid
-          if (updates.startTime !== undefined) {
+          if (updates.startTime !== undefined)
             updates.startTime = snapToGrid(
-              updates.startTime, 
-              state.project.bpm, 
-              GridSize.SIXTEENTH, 
+              updates.startTime,
+              state.project.bpm,
+              GridSize.SIXTEENTH,
               state.project.timeSignature
             )
-          }
-          
+
           return { ...clip, ...updates }
         }
         return clip

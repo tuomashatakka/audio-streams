@@ -211,26 +211,23 @@ function AudioTrack({ id, name, volume, onVolumeChange }: AudioTrackProps) {
     onVolumeChange(id, newVolume)
   }, [id, onVolumeChange])
 
-  return (
-    <div
-      className="audio-track"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      <div className="track-header">
-        <h3 className="track-name">{name}</h3>
-        <input
-          type="range"
-          min="0"
-          max="1"
-          step="0.01"
-          value={volume}
-          onChange={handleVolumeChange}
-          className="volume-slider"
-        />
-      </div>
+  return <div
+    className="audio-track"
+    onMouseEnter={() => setIsHovered(true)}
+    onMouseLeave={() => setIsHovered(false)}>
+    <div className="track-header">
+      <h3 className="track-name">{name}</h3>
+      <input
+        type="range"
+        min="0"
+        max="1"
+        step="0.01"
+        value={volume}
+        onChange={handleVolumeChange}
+        className="volume-slider"
+      />
     </div>
-  )
+  </div>
 }
 
 export default AudioTrack
